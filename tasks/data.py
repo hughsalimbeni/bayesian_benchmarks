@@ -20,9 +20,14 @@ import logging
 from urllib.request import urlopen
 logging.getLogger().setLevel(logging.INFO)
 import zipfile
+from six.moves import configparser
 
-DATA_PATH = '/vol/bitbucket/hrs13/data'
-BASE_SEED = 0
+
+cfg = configparser.ConfigParser()
+cfg.read('../bayesian_benchmarksrc')
+
+DATA_PATH = cfg['paths']['data_path']
+BASE_SEED = int(cfg['seeds']['seed'])
 
 ALL_REGRESSION_DATATSETS = {}
 ALL_CLASSIFICATION_DATATSETS = {}

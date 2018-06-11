@@ -1,30 +1,23 @@
+import sys
+sys.path.append('../')
+
 import argparse
+import numpy as np
+from tinydb import TinyDB
+from importlib import import_module
+
+from scipy.special import logsumexp
+from scipy.stats import multinomial
 
 from tasks.data import ALL_CLASSIFICATION_DATATSETS
 
-import numpy as np
-from tinydb import TinyDB
-
-
-from scipy.stats import multinomial
-from scipy.special import logsumexp
-
 parser = argparse.ArgumentParser()
-
-parser.add_argument("--model", default='linear', nargs='?', type=str)
-parser.add_argument("--dataset", default='iris', nargs='?', type=str)
+parser.add_argument("--model", default='variationally_sparse_gp', nargs='?', type=str)
+parser.add_argument("--dataset", default='acute-nephritis', nargs='?', type=str)
 parser.add_argument("--split", default=0, nargs='?', type=int)
-parser.add_argument("--num_samples", default=1, nargs='?', type=int)
-
 ARGS = parser.parse_args()
 
-path = '../baseline_models/{}/run.py'.format(ARGS.model)
-
 data = ALL_CLASSIFICATION_DATATSETS[ARGS.dataset]()
-
-exec(open(path).read())  # defines run_classification
-
-predictions = run_classification(data.X_train, data.Y_train, data.X_test, S=ARGS.num_samples)
 
 def onehot(Y, K):
     ret = np.zeros((len(Y), K))
@@ -32,18 +25,26 @@ def onehot(Y, K):
         ret[Y.flatten()==k, k] = 1.
     return ret
 
-Y_oh = onehot(data.Y_test, data.K)
+Y_oh = onehot(data.Y_test, data.K)[None, :, :]  # 1, N_test, K
 
-logp_SN = np.array([multinomial.logpmf(Y_oh, n=1, p=p) for p in predictions])
-logp_N = logsumexp(logp_SN, b=1./float(ARGS.num_samples), axis=0)
+models = import_module('models.{}.models'.format(ARGS.model))
 
-test_lik = np.average(logp_N)
+model = models.ClassificationModel(data.K)
+model.fit(data.X_train, data.Y_train)
+p = model.predict(data.X_test)  # S, N_test, K or N_test, K
 
-db = TinyDB('db.json')
-d = {'test_likelihood':test_lik, 'task':'classification'}
-d.update(ARGS.__dict__)
-db.insert(d)
+if len(p.shape) == 2:
+    p = np.expand_dims(p, 0)
 
+# evaluation metrics
+res = {}
+logp_SN = multinomial.logpmf(Y_oh, n=1, p=p)
+logp_N = logsumexp(logp_SN, axis=0, b=1./len(Y_oh))
+res['test_loglik'] = np.average(logp_N)
 
+pred_SN = np.argmax(p, -1)
+pred_N = np.median(pred_SN, axis=0)
+res['test_acc'] = np.average(np.array(pred_N == data.Y_test.flatten()).astype(float))
 
-
+res.update(ARGS.__dict__)
+TinyDB('../results/results_db.json').table('classification').insert(res)

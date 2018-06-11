@@ -2,6 +2,11 @@ import argparse
 import numpy as np
 from scipy.stats import norm
 from tinydb import TinyDB
+from importlib import import_module
+from scipy.special import logsumexp
+
+import sys
+sys.path.append('../')
 
 from data import ALL_REGRESSION_DATATSETS
 
@@ -11,38 +16,41 @@ parser.add_argument("--dataset", default='boston', nargs='?', type=str)
 parser.add_argument("--split", default=0, nargs='?', type=int)
 ARGS = parser.parse_args()
 
-
 data = ALL_REGRESSION_DATATSETS[ARGS.dataset](split=ARGS.split)
 
-run_path = '../baseline_models/{}/run.py'.format(ARGS.model)
+Y_std = data.Y_std.flatten()[None, None, :]  # 1, 1, D_y,
+Y_test = data.Y_test[None, :, :]  # 1, N_test, D_y
 
-exec(open(run_path).read())
+models = import_module('models.{}.models'.format(ARGS.model))
 
-pred_mean, pred_var = run_regression(data.X_train, data.Y_train, data.X_test)
+model = models.RegressionModel()
+model.fit(data.X_train, data.Y_train)
+m, v = model.predict(data.X_test)
+
+# shape is either (N_test, Dy) or (S, N_test, Dy)
+if len(m.shape) == 2:
+    m = np.expand_dims(m, 0)
+    v = np.expand_dims(v, 0)
 
 # evaluation metrics
-test_lik = np.average(norm.logpdf(data.Y_test, loc=pred_mean, scale=pred_var**0.5))
-test_lik_unnormalized = np.average(norm.logpdf(data.Y_test * data.Y_std,
-                                               loc=pred_mean * data.Y_std,
-                                               scale=pred_var**0.5 * data.Y_std))
+# average over samples, assuming equally weighted i.e. simple MC
+calculate_lik = lambda y, m, s: np.average(logsumexp(norm.logpdf(y, loc=m, scale=s), axis=0, b=1./m.shape[0]))
 
-test_mae = np.average(np.abs(data.Y_test - pred_mean))
-test_rmse = np.average((data.Y_test - pred_mean)**2)**0.5
+res = {}
+res['test_loglik'] = calculate_lik(Y_test, m, v**0.5)
+res['test_loglik_unnormalized'] = calculate_lik(Y_test * Y_std, m * Y_std, (v**0.5) * Y_std)
 
+d = data.Y_test - m
+du = d * Y_std
+
+res['test_mae'] = np.average(np.abs(d))
+res['test_mae_unnormalized'] = np.average(np.abs(du))
+
+res['test_rmse'] = np.average(d**2)**0.5
+res['test_rmse_unnormalized'] = np.average(du**2)**0.5
+res['asdf'] = 0.
 
 # save
-db = TinyDB('../results/db.json')
-d = {'task':'regression',
-     'test_loglikelihood':test_lik,
-     'test_loglikelihood_unnormalized':test_lik_unnormalized,
-     'test_mae':test_mae,
-     'test_rmse':test_rmse,
-     }
-d.update(ARGS.__dict__)
-db.insert(d)
-
-
-
-
-
-
+db = TinyDB('../results/results_db.json').table('regression')
+res.update(ARGS.__dict__)
+db.insert(res)

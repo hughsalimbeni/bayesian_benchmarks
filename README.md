@@ -11,7 +11,7 @@ Problems this repository attempts to solve:
 
 Key aims (science):
 * Curate a set of benchmarks that meaningfully compare the efficacy of Bayesian models in real-world tasks.
-* Maintain a fair assessment of benchmark methods, with full implementations provided.
+* Maintain a fair assessment of benchmark methods, with full implementations and results.
 
 Key aims (code):
 * Transparancy
@@ -19,14 +19,7 @@ Key aims (code):
 * Reproducibility
 
 Current tasks:
-Conditional Gaussian estimation
-Conditional density estimation
-Classification
-
-Proposed tasks
-Active learning
-
-
-
-
-
+* Classification and regression.
+* Density estimation (real world and synthetic)
+* Active learning
+* Adversarial robustness

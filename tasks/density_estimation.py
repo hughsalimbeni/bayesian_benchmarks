@@ -15,7 +15,7 @@ ARGS = parser.parse_args()
 from tasks.data import ALL_REGRESSION_DATATSETS
 data = ALL_REGRESSION_DATATSETS[ARGS.dataset]()
 
-run_path = '../baseline_models/{}/run.py'.format(ARGS.model)
+run_path = '../models/{}/models.py'.format(ARGS.model)
 
 run_density_estimation = None
 exec(open(run_path).read()) # this should redefine run_regression
