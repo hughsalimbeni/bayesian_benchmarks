@@ -1,4 +1,6 @@
 import itertools
+import os
+from subprocess import call
 
 def make_experiment_combinations(combinations : list):
     """
@@ -44,18 +46,65 @@ def make_local_jobs(script : str, experiments : list):
 
 def make_condor_jobs(script : str, experiments : list):
     """
-    Writes a condor submission file, and also creates the executable if necessary
+    Writes a very basic condor submission file, and also creates the executable if necessary. Preamble for the 
+    exectable (e.g. for setting up the python environment) should go in 'preamble.txt.txt',  
 
     :param script: name of python script to run
     :param experiments: list of dictionaries of args
     :return: None
     """
-    raise NotImplementedError
+    condor_run_file = 'condor_run'
+    if True:# not os.path.isfile(condor_run_file):
+        with open(condor_run_file, 'w') as f:
+            f.write("#!/usr/bin/env bash\n")
+
+            preamble = 'preamble.txt'
+            if os.path.isfile(preamble):
+                for l in open(preamble, 'r'):
+                    f.writelines(l)
+
+            t = "python "
+            for i in range(1, 10):
+                t += '$' + str(i) + ' '
+            for i in range(10, 20):
+                t += '${' + str(i) + '} '
+
+            f.write(t + '\n')
+
+        call(["chmod", '777', condor_run_file])
+
+
+    with open('condor_jobs', 'w') as f:
+        f.write('Universe   = vanilla\n')
+        f.write('Executable = condor_run \n')
+
+        # or send these elsewhere
+        # f.write('Log        = /dev/null\n')
+        # f.write('Output     = /dev/null\n')
+        # f.write('Error      = /dev/null\n')
+
+        f.write('Log        = /vol/bitbucket/hrs13/condor/$(Process)_log.txt\n')
+        f.write('Output     = /vol/bitbucket/hrs13/condor/$(Process)_stdout.txt\n')
+        f.write('Error      = /vol/bitbucket/hrs13/condor/$(Process)_stderr.txt\n')
+
+
+        f.write('\n')
+
+        for e in experiments:
+            t = 'Arguments = {}.py '.format(script)
+            for k in e:
+                t += '--{}={} '.format(k, e[k])
+            t += '\nQueue 1\n'
+            f.write(t)
+
+
 
 def make_kubernetes_jobs(script : str, experiments : list):
     """
     Writes kubernetes submission file
-
+    
+    TODO 
+    
     :param script: name of python script to run
     :param experiments: list of dictionaries of args
     :return: None

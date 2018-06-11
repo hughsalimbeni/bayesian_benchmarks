@@ -21,7 +21,7 @@ from urllib.request import urlopen
 logging.getLogger().setLevel(logging.INFO)
 import zipfile
 
-DATA_PATH = '/data'
+DATA_PATH = '/vol/bitbucket/hrs13/data'
 BASE_SEED = 0
 
 ALL_REGRESSION_DATATSETS = {}
