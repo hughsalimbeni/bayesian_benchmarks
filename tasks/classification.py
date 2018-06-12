@@ -3,13 +3,14 @@ sys.path.append('../')
 
 import argparse
 import numpy as np
-from tinydb import TinyDB
+from database_utils import Database
+
 from importlib import import_module
 
-from scipy.special import logsumexp
 from scipy.stats import multinomial
 
 from tasks.data import ALL_CLASSIFICATION_DATATSETS
+from models.non_bayesian_models import non_bayesian_model
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--model", default='variationally_sparse_gp', nargs='?', type=str)
@@ -27,24 +28,31 @@ def onehot(Y, K):
 
 Y_oh = onehot(data.Y_test, data.K)[None, :, :]  # 1, N_test, K
 
-models = import_module('models.{}.models'.format(ARGS.model))
+Model = non_bayesian_model(ARGS.model, 'classification') or\
+        import_module('models.{}.models'.format(ARGS.model)).ClassificationModel
+model = Model(data.K)
 
-model = models.ClassificationModel(data.K)
+# model = models.ClassificationModel(data.K)
 model.fit(data.X_train, data.Y_train)
-p = model.predict(data.X_test)  # S, N_test, K or N_test, K
+p = model.predict(data.X_test)  # N_test, K
 
-if len(p.shape) == 2:
-    p = np.expand_dims(p, 0)
+# clip very large and small probs
+eps = 1e-12
+p = np.clip(p, eps, 1 - eps)
+p = p / np.expand_dims(np.sum(p, -1), -1)
 
 # evaluation metrics
 res = {}
-logp_SN = multinomial.logpmf(Y_oh, n=1, p=p)
-logp_N = logsumexp(logp_SN, axis=0, b=1./len(Y_oh))
-res['test_loglik'] = np.average(logp_N)
 
-pred_SN = np.argmax(p, -1)
-pred_N = np.median(pred_SN, axis=0)
-res['test_acc'] = np.average(np.array(pred_N == data.Y_test.flatten()).astype(float))
+logp = multinomial.logpmf(Y_oh, n=1, p=p)
+
+res['test_loglik'] = np.average(logp)
+
+pred = np.argmax(p, axis=-1)
+
+res['test_acc'] = np.average(np.array(pred == data.Y_test.flatten()).astype(float))
 
 res.update(ARGS.__dict__)
-TinyDB('../results/results_db.json').table('classification').insert(res)
+
+with Database('../results/results.db') as db:
+    db.write('classification', res)

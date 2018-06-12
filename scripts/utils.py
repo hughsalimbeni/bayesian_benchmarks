@@ -2,7 +2,6 @@ import itertools
 import os
 from subprocess import call
 
-
 def make_experiment_combinations(combinations : list):
     """
     The product of all combinations of arguments.

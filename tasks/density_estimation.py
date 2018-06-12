@@ -1,7 +1,10 @@
-import argparse
+import sys
+sys.path.append('../')
 
+import argparse
 import numpy as np
 from tinydb import TinyDB
+from importlib import import_module
 
 parser = argparse.ArgumentParser()
 
@@ -17,24 +20,33 @@ data = ALL_REGRESSION_DATATSETS[ARGS.dataset]()
 
 run_path = '../models/{}/models.py'.format(ARGS.model)
 
-run_density_estimation = None
-exec(open(run_path).read()) # this should redefine run_regression
+Y_test = data.Y_test.flatten()  # N_test,
+levels = np.linspace(np.min(Y_test), np.max(Y_test), ARGS.levels)
 
-if not run_density_estimation:
-    raise NotImplementedError
+lower_ind = np.argmin(Y_test[None, :] > levels[:, None], 0) - 1
+interp = []
+for y, l in zip(Y_test, lower_ind):
+    interp.append((y - levels[l])/(levels[l+1] - levels[l]))
+interp = np.array(interp)
 
-levels = np.linspace(np.min(data.Y_test), np.max(data.Y_test), ARGS.levels)
+models = import_module('models.{}.models'.format(ARGS.model))
 
-a = np.argmin((levels[:, None] - data.Y_test.flatten()[None, :])**2, 0)
+model = models.DensityEstimationModel()
+model.fit(data.X_train, data.Y_train)
 
-logps = run_density_estimation(data.X_train, data.Y_train, data.X_test, levels)
-l = []
-for logp, aa in zip(logps.T, a):
-    l.append(logp[aa])
+logps = model.predict(data.X_test, levels)
 
-test_lik = np.average(l)
 
-db = TinyDB('db.json')
-d = {'test_likelihood':test_lik, 'task':'density_estimation'}
-d.update(ARGS.__dict__)
-db.insert(d)
+logp = interp[:, None] * logps[lower_ind, :, 0] + (1-interp)[:, None] * logps[lower_ind + 1, :, :]
+
+print(logp.shape)
+# test_lik = np.average(l)
+#
+#
+# res = {}
+# res['test_likelihood'] = test_lik
+#
+# print(test_lik)
+#
+# # res.update(ARGS.__dict__)
+# # TinyDB('../results/results_db.json').table('density_estimation').insert(res)

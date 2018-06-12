@@ -1,18 +1,21 @@
-import argparse
-import numpy as np
-from tinydb import TinyDB
-from scipy.stats import multinomial
-from importlib import import_module
 import sys
 sys.path.append('../')
 
+import argparse
+import numpy as np
+from scipy.stats import multinomial
+from importlib import import_module
+
 from data import ALL_CLASSIFICATION_DATATSETS
+from database_utils import Database
+from models.non_bayesian_models import non_bayesian_model
+
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--model", default='variationally_sparse_gp', nargs='?', type=str)
 parser.add_argument("--dataset", default='statlog-landsat', nargs='?', type=str)
 parser.add_argument("--split", default=0, nargs='?', type=int)
-parser.add_argument("--iterations", default=10, nargs='?', type=int)
+parser.add_argument("--iterations", default=50, nargs='?', type=int)
 parser.add_argument("--num_initial_points", default=3, nargs='?', type=int)
 
 ARGS = parser.parse_args()
@@ -32,8 +35,9 @@ def onehot(Y, K):
 
 Y_oh = onehot(Y, data.K)
 
-models = import_module('models.{}.models'.format(ARGS.model))
-model = models.ClassificationModel(data.K)
+Model = non_bayesian_model(ARGS.model, 'classification') or\
+        import_module('models.{}.models'.format(ARGS.model)).ClassificationModel
+model = Model(data.K)
 
 test_ll = []
 train_ll = []
@@ -42,15 +46,22 @@ test_acc = []
 train_acc = []
 all_acc = []
 
-for i in range(min(ARGS.iterations, X.shape[0] - ARGS.num_initial_points)):
+for _ in range(min(ARGS.iterations, X.shape[0] - ARGS.num_initial_points)):
     model.fit(X[ind], Y[ind])
 
     p = model.predict(X)  # NK
+    # clip very large and small probs
+    eps = 1e-12
+    p = np.clip(p, eps, 1 - eps)
+    p = p / np.expand_dims(np.sum(p, -1), -1)
 
-    # entropy of predictions at the the unseen points
-    ent = multinomial.entropy(n=1, p=p[np.invert(ind)])  # N
+    # entropy of predictions at all points
+    ent = multinomial.entropy(n=1, p=p)
 
-    # choose the highest entropy point to see
+    # set the seen ones to -inf so we don't choose them
+    ent[ind] = -np.inf
+
+    # choose the highest entropy point to see next
     i = np.argmax(ent)
     ind[i] = True
 
@@ -66,13 +77,14 @@ for i in range(min(ARGS.iterations, X.shape[0] - ARGS.num_initial_points)):
 
 
 # save
-db = TinyDB('../results/results_db.json').table('active_learning')
-d = {'test_loglik':test_ll,
-     'total_loglik':train_ll,
-     'test_loglik':all_ll,
-     'test_acc':test_acc,
-     'train_acc':train_acc,
-     'total_acc':all_acc,
+res = {'test_loglik':np.array(test_ll),
+      'train_loglik':np.array(train_ll),
+      'toal_loglik':np.array(all_ll),
+      'test_acc':np.array(test_acc),
+      'train_acc':np.array(train_acc),
+      'total_acc':np.array(all_acc),
      }
-d.update(ARGS.__dict__)
-db.insert(d)
+res.update(ARGS.__dict__)
+
+with Database('../results/results.db') as db:
+    db.write('active_learning', res)

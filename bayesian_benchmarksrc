@@ -1,7 +1,3 @@
-[logging]
-# possible levels: CRITICAL, ERROR, WARNING, INFO, DEBUG, NOSET
-logging_level = INFO
-
 [paths]
 data_path= /vol/bitbucket/hrs13/data
 

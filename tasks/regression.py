@@ -1,7 +1,9 @@
 import argparse
 import numpy as np
 from scipy.stats import norm
-from tinydb import TinyDB
+# from tinydb import TinyDB
+from database_utils import Database
+
 from importlib import import_module
 from scipy.special import logsumexp
 
@@ -9,10 +11,11 @@ import sys
 sys.path.append('../')
 
 from data import ALL_REGRESSION_DATATSETS
+from models.non_bayesian_models import non_bayesian_model
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--model", default='linear', nargs='?', type=str)
-parser.add_argument("--dataset", default='boston', nargs='?', type=str)
+parser.add_argument("--model", default='deep_gp_doubly_stochastic', nargs='?', type=str)
+parser.add_argument("--dataset", default='energy', nargs='?', type=str)
 parser.add_argument("--split", default=0, nargs='?', type=int)
 ARGS = parser.parse_args()
 
@@ -21,10 +24,12 @@ data = ALL_REGRESSION_DATATSETS[ARGS.dataset](split=ARGS.split)
 Y_std = data.Y_std.flatten()[None, None, :]  # 1, 1, D_y,
 Y_test = data.Y_test[None, :, :]  # 1, N_test, D_y
 
-models = import_module('models.{}.models'.format(ARGS.model))
+Model = non_bayesian_model(ARGS.model, 'regression') or\
+        import_module('models.{}.models'.format(ARGS.model)).RegressionModel
+model = Model()
 
-model = models.RegressionModel()
 model.fit(data.X_train, data.Y_train)
+
 m, v = model.predict(data.X_test)
 
 # shape is either (N_test, Dy) or (S, N_test, Dy)
@@ -48,9 +53,8 @@ res['test_mae_unnormalized'] = np.average(np.abs(du))
 
 res['test_rmse'] = np.average(d**2)**0.5
 res['test_rmse_unnormalized'] = np.average(du**2)**0.5
-res['asdf'] = 0.
 
-# save
-db = TinyDB('../results/results_db.json').table('regression')
 res.update(ARGS.__dict__)
-db.insert(res)
+
+with Database('../results/results.db') as db:
+    db.write('regression', res)
