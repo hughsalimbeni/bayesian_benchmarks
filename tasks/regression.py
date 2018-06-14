@@ -1,16 +1,20 @@
-import argparse
-import numpy as np
-from scipy.stats import norm
-# from tinydb import TinyDB
-from database_utils import Database
+"""
+A conditional Gaussian estimation task: model p(y_n|x_n) = N(a(x_n), b(x_n))
 
-from importlib import import_module
-from scipy.special import logsumexp
+Metrics reported are test log likelihood, mean squared error, and absolute error, all for normalized and unnormalized y.
+
+"""
 
 import sys
 sys.path.append('../')
 
+import argparse
+import numpy as np
+from scipy.stats import norm
+from importlib import import_module
+
 from data import ALL_REGRESSION_DATATSETS
+from database_utils import Database
 from models.non_bayesian_models import non_bayesian_model
 
 parser = argparse.ArgumentParser()
@@ -21,32 +25,24 @@ ARGS = parser.parse_args()
 
 data = ALL_REGRESSION_DATATSETS[ARGS.dataset](split=ARGS.split)
 
-Y_std = data.Y_std.flatten()[None, None, :]  # 1, 1, D_y,
-Y_test = data.Y_test[None, :, :]  # 1, N_test, D_y
-
 Model = non_bayesian_model(ARGS.model, 'regression') or\
         import_module('models.{}.models'.format(ARGS.model)).RegressionModel
+
 model = Model()
-
 model.fit(data.X_train, data.Y_train)
-
 m, v = model.predict(data.X_test)
 
-# shape is either (N_test, Dy) or (S, N_test, Dy)
-if len(m.shape) == 2:
-    m = np.expand_dims(m, 0)
-    v = np.expand_dims(v, 0)
-
-# evaluation metrics
-# average over samples, assuming equally weighted i.e. simple MC
-calculate_lik = lambda y, m, s: np.average(logsumexp(norm.logpdf(y, loc=m, scale=s), axis=0, b=1./m.shape[0]))
-
 res = {}
-res['test_loglik'] = calculate_lik(Y_test, m, v**0.5)
-res['test_loglik_unnormalized'] = calculate_lik(Y_test * Y_std, m * Y_std, (v**0.5) * Y_std)
+res['test_loglik'] = norm.logpdf(data.Y_test,
+                                 loc=m,
+                                 scale=v**0.5)
+
+res['test_loglik_unnormalized'] = norm.logpdf(data.Y_test * data.Y_std,
+                                              loc=m * data.Y_std,
+                                              scale=(v**0.5) * data.Y_std)
 
 d = data.Y_test - m
-du = d * Y_std
+du = d * data.Y_std
 
 res['test_mae'] = np.average(np.abs(d))
 res['test_mae_unnormalized'] = np.average(np.abs(du))

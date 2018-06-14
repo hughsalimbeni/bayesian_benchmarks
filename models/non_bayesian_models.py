@@ -1,5 +1,5 @@
 import numpy as np
-from scipy.stats import norm
+
 from sklearn import linear_model
 from sklearn import neighbors
 from sklearn import svm
@@ -20,6 +20,12 @@ def regression_model(model):
         def predict(self, Xs):
             pred_mean = self.model.predict(Xs)[:, None]
             return pred_mean, np.ones_like(pred_mean) * self.std ** 2
+
+        def sample(self, Xs, num_samples):
+            m, v = self.predict(Xs)
+            N, D = np.shape(m)
+            m, v = np.expand_dims(m, 0), np.expand_dims(v, 0)
+            return m + np.random.randn(num_samples, N, D) * (v ** 0.5)
 
     return SKLWrapperRegression
 
@@ -100,19 +106,5 @@ def non_bayesian_model(name, task):
     elif name == 'mlp' and task == 'classification':
         return classification_model(neural_network.MLPClassifier())
 
-
-
     else:
         return None
-
-
-
-
-# class SKLWrapperDensityEstimation(object):
-#     def predict(self, Xs, levels):
-#         m, v = RegressionModel.predict(self, Xs)
-#
-#         logp = norm.logpdf(levels[:, None, None],
-#                            loc=m[None, :, :],
-#                            scale=(v ** 0.5)[None, :, :])
-#         return logp

@@ -93,23 +93,3 @@ def make_condor_jobs(script : str, experiments : list, overwrite=False):
                 t += '--{}={} '.format(k, e[k])
             t += '\nQueue 1\n'
             f.write(t)
-
-
-
-def make_kubernetes_jobs(script : str, experiments : list):
-    """
-    Writes kubernetes submission file
-    
-    TODO 
-    
-    :param script: name of python script to run
-    :param experiments: list of dictionaries of args
-    :return: None
-    """
-    raise NotImplementedError
-
-
-
-
-
-

@@ -13,7 +13,7 @@ small_iterations = 1000
 adam_lr = 0.01
 gamma = 0.1
 minibatch_size = 1000
-num_posterior_samples = 100
+num_posterior_samples = 1000
 initial_likelihood_var = 0.01
 
 
@@ -26,9 +26,9 @@ class RegressionModel(object):
             def __init__(self):
                 gpflow.likelihoods.Gaussian.__init__(self)
                 self.variance = initial_likelihood_var
-        return self.fit_with_lik(X, Y, Lik)
+        return self._fit(X, Y, Lik)
 
-    def fit_with_lik(self, X, Y, Lik, **kwargs):
+    def _fit(self, X, Y, Lik, **kwargs):
         if not self.model:
             ## build the model
             kerns = []
@@ -83,16 +83,27 @@ class RegressionModel(object):
 
         self.model.anchor(session=sess)
 
-
-    def predict(self, Xs):
+    def _predict(self, Xs, S):
         ms, vs = [], []
         n = max(len(Xs) / 100, 1)  # predict in small batches
         for xs in np.array_split(Xs, n):
-            m, v = self.model.predict_y(xs, num_posterior_samples)
+            m, v = self.model.predict_y(xs, S)
             ms.append(m)
             vs.append(v)
 
-        return np.concatenate(ms, 1), np.concatenate(vs, 1)
+        return np.concatenate(ms, 1), np.concatenate(vs, 1)  # num_posterior_samples, N_test, D_y
+
+    def predict(self, Xs):
+        ms, vs = self._predict(Xs, num_posterior_samples)
+
+        # the first two moments
+        m = np.average(ms, 0)
+        v = np.average(vs + ms**2, 0) - m**2
+        return m, v
+
+    def sample(self, Xs, S):
+        ms, vs = self._predict(Xs, S)
+        return ms + vs**0.5 * np.random.randn(*ms.shape)
 
 
 class ClassificationModel(RegressionModel):
@@ -111,7 +122,7 @@ class ClassificationModel(RegressionModel):
                     gpflow.likelihoods.MultiClass.__init__(self, K)
             num_latent = K
 
-        return self.fit_with_lik(X, Y, Lik, num_outputs=num_latent)
+        return self._fit(X, Y, Lik, num_outputs=num_latent)
 
 
     def predict(self, Xs):
@@ -122,14 +133,3 @@ class ClassificationModel(RegressionModel):
             return np.concatenate([1-m, m], -1)
         else:
             return m
-
-
-# class DensityEstimationModel(RegressionModel):
-#     def predict(self, Xs, levels):
-#         m, v = RegressionModel.predict(self, Xs)  # S, N_train, Dy
-#
-#         logp = norm.logpdf(levels[:, None, None, None],
-#                            loc=m[None, :, :, :],
-#                            scale=(v ** 0.5)[None, :, :, :])  # levels, S, N_train, Dy
-#
-#         return logsumexp(logp, axis=1, b=1./num_posterior_samples)  # levels, N_train, Dy

@@ -4,7 +4,7 @@ from scipy.cluster.vq import kmeans2
 from scipy.stats import norm
 
 num_inducing = 100
-iterations = 20000
+iterations = 2000
 small_iterations = 1000
 adam_lr = 0.01
 gamma = 0.1
@@ -51,6 +51,12 @@ class RegressionModel(object):
 
     def predict(self, Xs):
         return self.model.predict_y(Xs)
+
+    def sample(self, Xs, num_samples):
+        m, v = self.predict(Xs)
+        N, D = np.shape(m)
+        m, v = np.expand_dims(m, 0), np.expand_dims(v, 0)
+        return m + np.random.randn(num_samples, N, D) * (v ** 0.5)
 
 
 class ClassificationModel(object):
@@ -114,12 +120,4 @@ class ClassificationModel(object):
             return m
 
 
-# class DensityEstimationModel(RegressionModel):
-#     def predict(self, Xs, levels):
-#         m, v = RegressionModel.predict(self, Xs)
-#
-#         logp = norm.logpdf(levels[:, None, None],
-#                            loc=m[None, :, :],
-#                            scale=(v** 0.5)[None, :, :])
-#         return logp
 

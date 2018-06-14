@@ -1,5 +1,6 @@
 [paths]
-data_path= /vol/bitbucket/hrs13/data
+data_path = /data
+results_path = ./results
 
 [seeds]
 seed = 0
