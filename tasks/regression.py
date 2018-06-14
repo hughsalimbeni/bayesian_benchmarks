@@ -33,13 +33,11 @@ model.fit(data.X_train, data.Y_train)
 m, v = model.predict(data.X_test)
 
 res = {}
-res['test_loglik'] = norm.logpdf(data.Y_test,
-                                 loc=m,
-                                 scale=v**0.5)
+l = norm.logpdf(data.Y_test, loc=m, scale=v**0.5)
+res['test_loglik'] = np.average(l)
 
-res['test_loglik_unnormalized'] = norm.logpdf(data.Y_test * data.Y_std,
-                                              loc=m * data.Y_std,
-                                              scale=(v**0.5) * data.Y_std)
+lu = norm.logpdf(data.Y_test * data.Y_std, loc=m * data.Y_std, scale=(v**0.5) * data.Y_std)
+res['test_loglik_unnormalized'] = np.average(lu)
 
 d = data.Y_test - m
 du = d * data.Y_std

@@ -19,7 +19,7 @@ def regression_model(model):
 
         def predict(self, Xs):
             pred_mean = self.model.predict(Xs)[:, None]
-            return pred_mean, np.ones_like(pred_mean) * self.std ** 2
+            return pred_mean, np.ones_like(pred_mean) * (self.std + 1e-6) ** 2
 
         def sample(self, Xs, num_samples):
             m, v = self.predict(Xs)

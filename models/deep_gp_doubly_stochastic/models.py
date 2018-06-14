@@ -8,7 +8,7 @@ from scipy.stats import norm
 from scipy.special import logsumexp
 
 num_inducing = 100
-iterations = 20000
+iterations = 5000
 small_iterations = 1000
 adam_lr = 0.01
 gamma = 0.1
@@ -29,17 +29,16 @@ class RegressionModel(object):
         return self._fit(X, Y, Lik)
 
     def _fit(self, X, Y, Lik, **kwargs):
+        if X.shape[0] > num_inducing:
+            Z = kmeans2(X, num_inducing, minit='points')[0]
+        else:
+            # pad with random values
+            Z = np.concatenate([X, np.random.randn(num_inducing - X.shape[0], X.shape[1])], 0)
+
         if not self.model:
-            ## build the model
             kerns = []
             for _ in range(2):
                 kerns.append(gpflow.kernels.RBF(X.shape[1], lengthscales=float(X.shape[1])**0.5))
-
-            if X.shape[0] > num_inducing:
-                Z = kmeans2(X, num_inducing, minit='points')[0]
-            else:
-                # pad with random values
-                Z = np.concatenate([X, np.random.randn(num_inducing - X.shape[0], X.shape[1])], 0)
 
             mb_size = minibatch_size if X.shape[0] > 5000 else None
 
@@ -49,7 +48,7 @@ class RegressionModel(object):
 
             self.model.layers[0].q_sqrt = self.model.layers[0].q_sqrt.read_value() * 1e-5
 
-            if False:#isinstance(self.model.likelihood, gpflow.likelihoods.Gaussian):
+            if isinstance(self.model.likelihood, gpflow.likelihoods.Gaussian):
                 var_list = [[self.model.layers[-1].q_mu, self.model.layers[-1].q_sqrt]]
                 self.model.layers[-1].q_mu.set_trainable(False)
                 self.model.layers[-1].q_sqrt.set_trainable(False)
@@ -60,34 +59,42 @@ class RegressionModel(object):
             self.adam = gpflow.train.AdamOptimizer(adam_lr).make_optimize_tensor(self.model)
 
             iters = iterations
+            self.sess = self.model.enquire_session()
         else:
             iters = small_iterations  # after first time use fewer iterations
 
         # we might have new data
-        self.model.X = X
-        self.model.Y = Y
+        self.model.X.assign(X, session=self.sess)
+        self.model.Y.assign(Y, session=self.sess)
 
-        sess = self.model.enquire_session()
+        self.model.layers[0].feature.Z.assign(Z, session=self.sess)
+        self.model.layers[0].q_mu.assign(np.zeros((num_inducing, X.shape[1])), session=self.sess)
+        self.model.layers[0].q_sqrt.assign(1e-5*np.tile(np.eye(num_inducing)[None], [X.shape[1], 1, 1]), session=self.sess)
+
+        self.model.layers[1].feature.Z.assign(Z, session=self.sess)
+        num_outputs = self.model.layers[1].q_sqrt.shape[0]
+        self.model.layers[1].q_mu.assign(np.zeros((num_inducing, num_outputs)), session=self.sess)
+        self.model.layers[1].q_sqrt.assign(np.tile(np.eye(num_inducing)[None], [num_outputs, 1, 1]), session=self.sess)
 
         try:
             for _ in range(iters):
 
                 if _ % 100 == 0:
-                    print('{} {}'.format(_, sess.run(self.model.likelihood_tensor)))
+                    print('{} {}'.format(_, self.sess.run(self.model.likelihood_tensor)))
                 if self.ng:
-                    sess.run(self.ng)
-                sess.run(self.adam)
+                    self.sess.run(self.ng)
+                self.sess.run(self.adam)
 
         except KeyboardInterrupt:
             pass
 
-        self.model.anchor(session=sess)
+        self.model.anchor(session=self.sess)
 
     def _predict(self, Xs, S):
         ms, vs = [], []
         n = max(len(Xs) / 100, 1)  # predict in small batches
         for xs in np.array_split(Xs, n):
-            m, v = self.model.predict_y(xs, S)
+            m, v = self.model.predict_y(xs, S, session=self.sess)
             ms.append(m)
             vs.append(v)
 
@@ -127,9 +134,9 @@ class ClassificationModel(RegressionModel):
 
     def predict(self, Xs):
         m, v = self.model.predict_y(Xs, num_posterior_samples)  # num_samples, N_test, K
-        m = np.average(m, 0)
+        m = np.average(m, 0)  # N_test, K
         if self.K == 2:
-            # Bernoulli only gives one output, so append the complement to work with scipy.stats.multinomial
-            return np.concatenate([1-m, m], -1)
+            # Convert Bernoulli to onehot
+            return np.concatenate([1 - m, m], -1)
         else:
             return m
