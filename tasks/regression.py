@@ -33,6 +33,7 @@ model.fit(data.X_train, data.Y_train)
 m, v = model.predict(data.X_test)
 
 res = {}
+
 l = norm.logpdf(data.Y_test, loc=m, scale=v**0.5)
 res['test_loglik'] = np.average(l)
 

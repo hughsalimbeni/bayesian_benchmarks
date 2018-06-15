@@ -1,7 +1,8 @@
 """
 A classification task, which can be either binary or multiclass.
 
-Metrics reported are test loglikelihood, classification accuracy (precision, recall, AUC ROC TODO)
+Metrics reported are test loglikelihood, classification accuracy. Also the predictions are stored for 
+analysis of calibration etc. 
 
 """
 
@@ -62,7 +63,12 @@ pred = np.argmax(p, axis=-1)
 
 res['test_acc'] = np.average(np.array(pred == data.Y_test.flatten()).astype(float))
 
+res['Y_test'] = data.Y_test
+res['p_test'] = p
+
 res.update(ARGS.__dict__)
+
+print(res)
 
 with Database('../results/results.db') as db:
     db.write('classification', res)
