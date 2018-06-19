@@ -243,22 +243,40 @@ class Classification(Dataset):
 
     @property
     def needs_download(self):
-        if not os.path.isfile(os.path.join(DATA_PATH, 'data', 'iris', 'iris_R.dat')):
-            s = 'Need to download and unpack: '
-            s += 'http://persoal.citius.usc.es/manuel.fernandez.delgado/papers/jmlr/data.tar.gz'
-            s += '\nSorry, autodownload not available (file too large!)'
-            raise NotImplementedError(s)
-        return False
+        if os.path.isfile(os.path.join(DATA_PATH, 'classification_data', 'iris', 'iris_R.dat')):
+            return False
+        else:
+            return True
+
+    def download(self):
+        logging.info('donwloading classification data. WARNING: downloading 195MB file'.format(self.name))
+
+        filename = os.path.join(DATA_PATH, 'classification_data.tar.gz')
+
+        url = 'http://persoal.citius.usc.es/manuel.fernandez.delgado/papers/jmlr/data.tar.gz'
+        with urlopen(url) as response, open(filename, 'wb') as out_file:
+            data = response.read()
+            out_file.write(data)
+
+        import tarfile
+        tar = tarfile.open(filename)
+        tar.extractall(path=os.path.join(DATA_PATH, 'classification_data'))
+        tar.close()
+
+        os.remove(filename)
+
+        logging.info('finished donwloading {} data'.format(self.name))
+
 
     def read_data(self):
-        datapath = os.path.join(DATA_PATH, 'data', self.name, self.name + '_R.dat')
+        datapath = os.path.join(DATA_PATH, 'classification_data', self.name, self.name + '_R.dat')
         if os.path.isfile(datapath):
             data = np.array(pandas.read_csv(datapath, header=0, delimiter='\t').values).astype(float)
         else:
-            data_path1 = os.path.join(DATA_PATH, 'data', self.name, self.name + '_train_R.dat')
+            data_path1 = os.path.join(DATA_PATH, 'classification_data', self.name, self.name + '_train_R.dat')
             data1 = np.array(pandas.read_csv(data_path1, header=0, delimiter='\t').values).astype(float)
 
-            data_path2 = os.path.join(DATA_PATH, 'data', self.name, self.name + '_test_R.dat')
+            data_path2 = os.path.join(DATA_PATH, 'classification_data', self.name, self.name + '_test_R.dat')
             data2 = np.array(pandas.read_csv(data_path2, header=0, delimiter='\t').values).astype(float)
 
             data = np.concatenate([data1, data2], 0)
