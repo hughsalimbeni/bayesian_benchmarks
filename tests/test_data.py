@@ -23,7 +23,7 @@ from bayesian_benchmarks.data import ALL_CLASSIFICATION_DATATSETS, ALL_REGRESSIO
 
 regression_datasets = list(ALL_REGRESSION_DATATSETS.keys())
 regression_datasets.sort()
-regression_datasets.remove('kinnm')  # link appears broken temporarily
+regression_datasets.remove('kin8nm')  # link appears broken temporarily
 
 classification_datasets = list(ALL_CLASSIFICATION_DATATSETS.keys())
 classification_datasets.sort()
