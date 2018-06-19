@@ -1,5 +1,3 @@
-Run with gpflow 147ce61e840ba80d3b387018c24026f32231e200
-
 Regression models:
 * Less than 5000 points: SGPR [Titsias 2009] with lbfgs.
 * More than 5000 points: SVGP [Hensman 2013] with natural gradients [Salimbeni 2018] for the variational parameters and Adam optimizer the remaining parameters.

@@ -45,7 +45,3 @@ print(logp.shape)
 # res = {}
 # res['test_likelihood'] = test_lik
 #
-# print(test_lik)
-#
-# # res.update(ARGS.__dict__)
-# # TinyDB('../results/results_db.json').table('density_estimation').insert(res)

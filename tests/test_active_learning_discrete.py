@@ -13,13 +13,9 @@
 # limitations under the License.
 
 import unittest
-from numpy.testing import assert_almost_equal
-import numpy as np
 from ddt import ddt, data
 
-import os
-
-from bayesian_benchmarks.tasks.regression import run
+from bayesian_benchmarks.tasks.active_learning_discrete import run
 from bayesian_benchmarks.database_utils import Database
 
 class Bunch(object):
@@ -32,6 +28,7 @@ models = [
           'variationally_sparse_gp_minibatch',
           'deep_gp_doubly_stochastic',
           'svm',
+          'naive_bayes',
           'knn',
           'decision_tree',
           'random_forest',
@@ -41,17 +38,32 @@ models = [
           ]
 
 @ddt
-class TestRegression(unittest.TestCase):
+class TestClassification(unittest.TestCase):
     @data(*models)
-    def test(self, model):
-        d = {'dataset':'boston',
+    def test_multi(self, model):
+        d = {'dataset':'iris',
              'model' :  model,
-             'split' : 2**32 - 1}  # make sure not to use this seed for real experiments!
+             'split' : 2**32 - 1,  # make sure not to use this seed for real experiments!
+             'iterations' : 2,
+             'num_initial_points' : 10}
 
         run(Bunch(d), is_test=True)
 
         with Database() as db:
-            db.delete('regression', d)
+            db.delete('active_learning_discrete', d)
+
+    @data(*models)
+    def test_binary(self, model):
+        d = {'dataset': 'planning',
+              'model': model,
+              'split': 2 ** 32 - 1,  # make sure not to use this seed for real experiments!
+              'iterations': 2,
+              'num_initial_points': 10}
+
+        run(Bunch(d), is_test=True)
+
+        with Database() as db:
+            db.delete('active_learning_discrete', d)
 
 
 if __name__ == '__main__':

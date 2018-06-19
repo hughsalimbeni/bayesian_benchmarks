@@ -10,12 +10,17 @@ before_install:
 install:
   - pip install numpy scipy sklearn pandas pytest matplotlib pytest-xdist pytest-cov codecov ddt
   - python setup.py install
+  - python tests/travis_prelim.py
   - git clone https://github.com/GPflow/GPflow.git
   - cd GPflow
   - git reset --hard 3a169917326bdacef9bb7003a8122766d7cf6472
   - pip install .
   - cd ../
-
+  - git clone https://github.com/ICL-SML/Doubly-Stochastic-DGP.git
+  - cd Doubly-Stochastic-DGP
+  - git reset --hard 23343e1143390168fdb7abe19c5878933dea9e06
+  - pip install .
+  - cd ../
 
 script:
   - pytest -W ignore::UserWarning --durations=50 --cov=./bayesian_benchmarks -d --tx 3*popen//python=python3.5 --pyargs ./tests
