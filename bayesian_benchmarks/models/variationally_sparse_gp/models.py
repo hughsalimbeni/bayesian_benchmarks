@@ -76,7 +76,7 @@ class ClassificationModel(object):
     def fit(self, X, Y):
         Z = kmeans2(X, self.ARGS.num_inducing, minit='points')[0] if X.shape[0] > self.ARGS.num_inducing else X.copy()
 
-        if not self.model or Z.shape[0]:
+        if not self.model:
             # NB mb_size does not change once the model is created
             mb_size = self.ARGS.minibatch_size if X.shape[0] > 5000 else None
 

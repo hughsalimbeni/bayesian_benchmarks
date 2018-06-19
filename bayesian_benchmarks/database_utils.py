@@ -40,7 +40,7 @@ class Database:
             self.conn = sqlite3.connect(name, detect_types=sqlite3.PARSE_DECLTYPES)
             self.cursor = self.conn.cursor()
 
-        except sqlite3.Error as e:
+        except sqlite3.Error as e:  # pragma: no cover
             print("Error connecting to database!")
 
     def close(self):

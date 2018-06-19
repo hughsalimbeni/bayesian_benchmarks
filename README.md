@@ -15,7 +15,7 @@ Aims:
 * Curate a set of benchmarks that meaningfully compare the efficacy of Bayesian models in real-world tasks.
 * Maintain a fair assessment of benchmark methods, with full implementations and results.
 
-Current tasks:
+Tasks:
 * Classification and regression
 * Density estimation (real world and synthetic) (TODO)
 * Active learning
@@ -32,3 +32,4 @@ Coming soon:
 * [Differentiable Compositional Kernel Learning for Gaussian Processes](https://arxiv.org/abs/1806.04326)
 * [Deep Gaussian Processes using Stochastic Gradient Hamiltonian Monte Carlo
 ](https://arxiv.org/pdf/1806.05490.pdf)
+

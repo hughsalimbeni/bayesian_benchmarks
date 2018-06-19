@@ -22,7 +22,7 @@ class RegressionModel(object):
                 minibatch_size = 2
                 num_posterior_samples = 2
                 initial_likelihood_var = 0.01
-        else:
+        else:  # pragma: no cover
             class ARGS:
                 num_inducing = 100
                 iterations = 5000
@@ -63,7 +63,7 @@ class RegressionModel(object):
 
             self.model.layers[0].q_sqrt = self.model.layers[0].q_sqrt.read_value() * 1e-5
 
-            if isinstance(self.model.likelihood, gpflow.likelihoods.Gaussian):
+            if isinstance(self.model.likelihood.likelihood, gpflow.likelihoods.Gaussian):
                 var_list = [[self.model.layers[-1].q_mu, self.model.layers[-1].q_sqrt]]
                 self.model.layers[-1].q_mu.set_trainable(False)
                 self.model.layers[-1].q_sqrt.set_trainable(False)
@@ -100,7 +100,7 @@ class RegressionModel(object):
                     self.sess.run(self.ng)
                 self.sess.run(self.adam)
 
-        except KeyboardInterrupt:
+        except KeyboardInterrupt:  # pragma: no cover
             pass
 
         self.model.anchor(session=self.sess)

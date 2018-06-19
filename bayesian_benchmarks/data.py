@@ -62,10 +62,6 @@ class Dataset(object):
         self.Y_test = Y[ind[n:]]
 
     @property
-    def name(self):
-        return type(self).__name__.lower()
-
-    @property
     def datadir(self):
         dir = os.path.join(DATA_PATH, self.name)
         if not os.path.isdir(dir):

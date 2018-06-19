@@ -102,7 +102,7 @@ class ClassificationModel(object):
     def fit(self, X, Y):
         Z = kmeans2(X, self.ARGS.num_inducing, minit='points')[0] if X.shape[0] > self.ARGS.num_inducing else X.copy()
 
-        if not self.model or Z.shape[0]:
+        if not self.model:
             # NB mb_size does not change once the model is created
             mb_size = self.ARGS.minibatch_size if X.shape[0] > self.ARGS.minibatch_size else None
 
@@ -120,10 +120,7 @@ class ClassificationModel(object):
                                             num_latent=num_latent,
                                             minibatch_size=mb_size)
 
-            if mb_size:
-                opt = gpflow.train.AdamOptimizer()
-            else:
-                opt = gpflow.train.ScipyOptimizer()
+            opt = gpflow.train.AdamOptimizer(self.ARGS.adam_lr)
 
             self.sess = self.model.enquire_session()
             iters = self.ARGS.iterations
