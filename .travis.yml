@@ -8,8 +8,14 @@ before_install:
   - sudo apt-get update -qq
 
 install:
-  - pip install numpy scipy pandas pytest matplotlib pytest-xdist pytest-cov codecov ddt
+  - pip install numpy scipy sklearn pandas pytest matplotlib pytest-xdist pytest-cov codecov ddt
   - python setup.py install
+  - git clone https://github.com/GPflow/GPflow.git
+  - cd GPflow
+  - git reset --hard 3a169917326bdacef9bb7003a8122766d7cf6472
+  - pip install .
+  - cd ../
+
 
 script:
   - pytest -W ignore::UserWarning --durations=50 --cov=./bayesian_benchmarks -d --tx 3*popen//python=python3.5 --pyargs ./tests

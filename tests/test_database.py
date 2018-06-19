@@ -44,7 +44,20 @@ class TestDatabase(unittest.TestCase):
             assert r1 == self.data1[k]
             assert r2 == self.data2[k]
 
+    def test_delete(self):
+        d = {'a': '3', 'b': 3, 'c': 3., 'd': 3 * np.ones(1), 'e': 'data3'}
 
+        with Database(self.tmp_path) as db:
+            db.write('test', d)
+
+        with Database(self.tmp_path) as db:
+            assert len(db.read('test', ['b'], {'a':3})) == 1
+
+        with Database(self.tmp_path) as db:
+            db.delete('test', {'a':'3'})
+
+        with Database(self.tmp_path) as db:
+            assert len(db.read('test', ['b'], {'a':3})) == 0
 
 
 if __name__ == '__main__':

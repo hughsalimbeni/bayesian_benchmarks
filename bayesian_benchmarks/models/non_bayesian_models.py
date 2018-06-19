@@ -10,7 +10,7 @@ from sklearn import neural_network
 
 def regression_model(model):
     class SKLWrapperRegression(object):
-        def __init__(self):
+        def __init__(self, is_test=False):
             self.model = model
 
         def fit(self, X, Y):
@@ -32,7 +32,7 @@ def regression_model(model):
 
 def classification_model(model):
     class SKLWrapperClassification(object):
-        def __init__(self, K):
+        def __init__(self, K, is_test=False):
             self.model = model
             self.K = K
 

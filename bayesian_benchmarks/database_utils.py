@@ -2,6 +2,8 @@ import sqlite3
 import numpy as np
 import io
 
+from bayesian_benchmarks.paths import RESULTS_DB_PATH
+
 ## from https://stackoverflow.com/questions/18621513/python-insert-numpy-array-into-sqlite3-database
 
 def adapt_array(arr):
@@ -29,8 +31,9 @@ class Database:
     def __init__(self, name=None):
         self.conn = None
         self.cursor = None
-        if name:
-            self.open(name)
+        name = name or RESULTS_DB_PATH
+
+        self.open(name)
 
     def open(self, name):
         try:

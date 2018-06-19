@@ -3,46 +3,56 @@ import numpy as np
 from scipy.cluster.vq import kmeans2
 from scipy.stats import norm
 
-num_inducing = 100
-iterations = 5000
-small_iterations = 1000
-adam_lr = 0.01
-gamma = 0.1
-minibatch_size = 1000
-initial_likelihood_var = 0.01
-
-
 class RegressionModel(object):
-    def __init__(self):
+    def __init__(self, is_test=False):
+        if is_test:
+            class ARGS:
+                num_inducing = 2
+                iterations = 1
+                small_iterations = 1
+                adam_lr = 0.01
+                gamma = 0.1
+                minibatch_size = 2
+                initial_likelihood_var = 0.01
+        else:
+            class ARGS:
+                num_inducing = 100
+                iterations = 5000
+                small_iterations = 1000
+                adam_lr = 0.01
+                gamma = 0.1
+                minibatch_size = 1000
+                initial_likelihood_var = 0.01
+        self.ARGS = ARGS
         self.model = None
 
     def fit(self, X, Y):
         small_data = X.shape[0] < 10000
 
-        if X.shape[0] > num_inducing:
-            Z = kmeans2(X, num_inducing, minit='points')[0]
+        if X.shape[0] > self.ARGS.num_inducing:
+            Z = kmeans2(X, self.ARGS.num_inducing, minit='points')[0]
         else:
             # pad with random values
-            Z = np.concatenate([X, np.random.randn(num_inducing - X.shape[0], X.shape[1])], 0)
+            Z = np.concatenate([X, np.random.randn(self.ARGS.num_inducing - X.shape[0], X.shape[1])], 0)
 
         # make model if necessary
         if not self.model:
             kern = gpflow.kernels.RBF(X.shape[1], lengthscales=float(X.shape[1])**0.5)
             lik = gpflow.likelihoods.Gaussian()
-            lik.variance = initial_likelihood_var
+            lik.variance = self.ARGS.initial_likelihood_var
 
             if small_data:
                 self.model = gpflow.models.SGPR(X, Y, kern, feat=Z)
                 self.model.likelihood.variance = lik.variance.read_value()
 
             else:
-                self.model = gpflow.models.SVGP(X, Y, kern, lik, feat=Z, minibatch_size=minibatch_size)
+                self.model = gpflow.models.SVGP(X, Y, kern, lik, feat=Z, minibatch_size=self.ARGS.minibatch_size)
 
                 var_list = [[self.model.q_mu, self.model.q_sqrt]]
                 self.model.q_mu.set_trainable(False)
                 self.model.q_sqrt.set_trainable(False)
-                ng = gpflow.train.NatGradOptimizer(gamma=gamma).make_optimize_tensor(self.model, var_list=var_list)
-                adam = gpflow.train.AdamOptimizer(adam_lr).make_optimize_tensor(self.model)
+                ng = gpflow.train.NatGradOptimizer(gamma=self.ARGS.gamma).make_optimize_tensor(self.model, var_list=var_list)
+                adam = gpflow.train.AdamOptimizer(self.ARGS.adam_lr).make_optimize_tensor(self.model)
 
             self.sess = self.model.enquire_session()
 
@@ -52,16 +62,16 @@ class RegressionModel(object):
         self.model.feature.Z.assign(Z, session=self.sess)
 
         if hasattr(self.model, 'q_mu'):
-            self.model.q_mu.assign(np.zeros((num_inducing, Y.shape[1])), session=self.sess)
-            self.model.q_sqrt.assign(np.tile(np.eye(num_inducing)[None], [Y.shape[1], 1, 1]), session=self.sess)
+            self.model.q_mu.assign(np.zeros((self.ARGS.num_inducing, Y.shape[1])), session=self.sess)
+            self.model.q_sqrt.assign(np.tile(np.eye(self.ARGS.num_inducing)[None], [Y.shape[1], 1, 1]), session=self.sess)
 
         # training: either using scipy or nat grad descent + Adam
         if small_data:
-            gpflow.train.ScipyOptimizer().minimize(self.model, session=self.sess, maxiter=iterations)
+            gpflow.train.ScipyOptimizer().minimize(self.model, session=self.sess, maxiter=self.ARGS.iterations)
 
         else:
 
-            for _ in range(iterations):
+            for _ in range(self.ARGS.iterations):
                 self.sess.run(ng)
                 self.sess.run(adam)
             self.model.anchor(session=self.sess)
