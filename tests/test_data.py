@@ -23,11 +23,12 @@ from bayesian_benchmarks.data import ALL_CLASSIFICATION_DATATSETS, ALL_REGRESSIO
 
 regression_datasets = list(ALL_REGRESSION_DATATSETS.keys())
 regression_datasets.sort()
+regression_datasets.remove('kinnm')  # link appears broken temporarily
 
 classification_datasets = list(ALL_CLASSIFICATION_DATATSETS.keys())
 classification_datasets.sort()
 
-# to avoid parallel downloading of the classification datasets:
+# # to avoid parallel downloading of the classification datasets:
 # ALL_CLASSIFICATION_DATATSETS['iris']()
 
 @ddt
