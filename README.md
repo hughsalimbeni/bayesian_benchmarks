@@ -1,5 +1,8 @@
 # Bayesian Benchmarks
 
+[![Build Status](https://travis-ci.org/hughsalimbeni/bayesian_benchmarks.svg?branch=master)](https://travis-ci.org/hughsalimbeni/bayesian_benchmarks)
+[![codecov](https://codecov.io/gh/hughsalimbeni/bayesian_benchmarks/branch/master/graph/badge.svg)](https://codecov.io/gh/hughsalimbeni/bayesian_benchmarks)
+
 This is a set of tools for evaluating Bayesian models, together with benchmark results.
 
 Problems this repository attempts to solve:
