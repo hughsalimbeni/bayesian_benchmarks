@@ -8,7 +8,7 @@ before_install:
   - sudo apt-get update -qq
 
 install:
-  - pip install numpy scipy pandas pytest matplotlib pytest-xdist pytest-cov codecov
+  - pip install numpy scipy pandas pytest matplotlib pytest-xdist pytest-cov codecov ddt
   - python setup.py install
 
 script:

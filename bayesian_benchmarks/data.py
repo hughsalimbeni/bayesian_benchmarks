@@ -178,7 +178,12 @@ class Naval(Dataset):
     def read_data(self):
         data = pandas.read_fwf(self.datapath, header=None).values
         # NB this is the first output
-        return data[:, :-2], data[:, -2].reshape(-1, 1)
+        X = data[:, :-2]
+        Y = data[:, -2].reshape(-1, 1)
+
+        # dims 8 and 11 have std=0:
+        X = np.delete(X, [8, 11], axis=1)
+        return X, Y
 
 
 @add_regression
