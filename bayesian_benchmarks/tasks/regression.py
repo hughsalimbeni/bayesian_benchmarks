@@ -15,7 +15,7 @@ from importlib import import_module
 
 from data import ALL_REGRESSION_DATATSETS
 from database_utils import Database
-from models.non_bayesian_models import non_bayesian_model
+from bayesian_benchmarks.models.non_bayesian_models import non_bayesian_model
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--model", default='deep_gp_doubly_stochastic', nargs='?', type=str)

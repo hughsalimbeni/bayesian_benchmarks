@@ -17,11 +17,8 @@ from importlib import import_module
 
 from scipy.stats import multinomial
 
-from sklearn.metrics import precision_recall_curve
-from sklearn.metrics import average_precision_score
-
-from tasks.data import ALL_CLASSIFICATION_DATATSETS
-from models.non_bayesian_models import non_bayesian_model
+from bayesian_benchmarks.data import ALL_CLASSIFICATION_DATATSETS
+from bayesian_benchmarks.models.non_bayesian_models import non_bayesian_model
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--model", default='variationally_sparse_gp', nargs='?', type=str)

@@ -3,7 +3,6 @@ sys.path.append('../')
 
 import argparse
 import numpy as np
-from tinydb import TinyDB
 from importlib import import_module
 
 parser = argparse.ArgumentParser()
@@ -15,7 +14,7 @@ parser.add_argument("--levels", default=1000, nargs='?', type=int)
 
 ARGS = parser.parse_args()
 
-from tasks.data import ALL_REGRESSION_DATATSETS
+from bayesian_benchmarks.data import ALL_REGRESSION_DATATSETS
 data = ALL_REGRESSION_DATATSETS[ARGS.dataset]()
 
 run_path = '../models/{}/models.py'.format(ARGS.model)

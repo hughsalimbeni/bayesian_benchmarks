@@ -1,8 +1,13 @@
+import sys
+sys.path.append('../tasks')
+
+from bayesian_benchmarks.data import ALL_REGRESSION_DATATSETS, ALL_CLASSIFICATION_DATATSETS
+
 import itertools
 import os
 from subprocess import call
 
-def make_experiment_combinations(combinations : list):
+def make_experiment_combinations(combinations: list):
     """
     The product of all combinations of arguments.
     :param combinations: A list of dictionaries, each with a list of args
@@ -26,9 +31,14 @@ def make_experiment_combinations(combinations : list):
 
     return ret
 
-def make_local_jobs(script : str, experiments : list, overwrite=False):
+
+def make_local_jobs(script: str, experiments: list, overwrite=False):
     """
-    Writes a file of scripts to be run in series on a single machine.
+    Writes a file of commands to be run in in series on a single machine, e.g. 
+    #!/usr/bin/env bash
+    python run_regression --split=0
+    python run_regression --split=1
+    etc. 
     
     If overwrite=True then a new file is written with a shebang, otherwise lines are appended. 
 
@@ -48,12 +58,13 @@ def make_local_jobs(script : str, experiments : list, overwrite=False):
             s += '\n'
             f.write(s)
 
-def make_condor_jobs(script : str, experiments : list, overwrite=False):
+
+def make_condor_jobs(script: str, experiments: list, overwrite=False):
     """
     Writes a condor submission file, and also creates the executable if necessary. Preamble for the 
     exectable (e.g. for setting up the python environment) should go in 'preamble.txt.txt'. Preamble
     for the condor submission should go in condor_preamble.txt.txt.
-    
+
     If overwrite=True then a new file is written with the condor preamble from condor_preamble.txt,
     otherwise lines are appended. 
 
@@ -93,3 +104,50 @@ def make_condor_jobs(script : str, experiments : list, overwrite=False):
                 t += '--{}={} '.format(k, e[k])
             t += '\nQueue 1\n'
             f.write(t)
+
+
+#################################################
+models = [
+          'linear',
+          'variationally_sparse_gp',
+          'deep_gp_doubly_stochastic',
+          'svm',
+          'knn',
+          'naive_bayes',
+          'decision_tree',
+          'random_forest',
+          'gradient_boosting_machine',
+          'adaboost',
+          'mlp',
+          ]
+
+
+############# Regression
+combinations = []
+combinations.append({'dataset' : list(ALL_REGRESSION_DATATSETS.keys())})
+combinations.append({'split' : [0]})
+combinations.append({'model' : models})
+experiments = make_experiment_combinations(combinations)
+
+make_local_jobs('../tasks/regression', experiments, overwrite=True)
+make_condor_jobs('../tasks/regression', experiments, overwrite=True)
+
+# make_local_jobs('../tasks/active_learning_continuous', experiments)
+# make_condor_jobs('../tasks/active_learning_continuous', experiments)
+
+# make_local_jobs('../tasks/conditional_density_estimation', experiments)
+# make_condor_jobs('../tasks/conditional_density_estimation', experiments)
+
+############# Classification
+combinations = []
+combinations.append({'dataset' : list(ALL_CLASSIFICATION_DATATSETS.keys())})
+combinations.append({'split' : [0]})
+combinations.append({'model' : models})
+
+experiments = make_experiment_combinations(combinations)
+
+# make_local_jobs('../tasks/classification', experiments)
+# make_condor_jobs('../tasks/classification', experiments)
+
+# make_local_jobs('../tasks/active_learning_discrete', experiments)
+# make_condor_jobs('../tasks/active_learning_discrete', experiments)

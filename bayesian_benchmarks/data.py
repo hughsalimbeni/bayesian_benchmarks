@@ -24,7 +24,12 @@ from six.moves import configparser
 
 
 cfg = configparser.ConfigParser()
-cfg.read('../bayesian_benchmarksrc')
+dirs = [os.curdir, os.path.dirname(os.path.realpath(__file__)),
+        os.path.join(os.path.dirname(os.path.realpath(__file__)), '..')]
+locations = map(os.path.abspath, dirs)
+for loc in locations:
+    if cfg.read(os.path.join(loc, 'bayesian_benchmarksrc')):
+        break
 
 DATA_PATH = cfg['paths']['data_path']
 BASE_SEED = int(cfg['seeds']['seed'])
