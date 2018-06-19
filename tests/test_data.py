@@ -28,7 +28,7 @@ classification_datasets = list(ALL_CLASSIFICATION_DATATSETS.keys())
 classification_datasets.sort()
 
 # to avoid parallel downloading of the classification datasets:
-ALL_CLASSIFICATION_DATATSETS['iris']()
+# ALL_CLASSIFICATION_DATATSETS['iris']()
 
 @ddt
 class TestRegression(unittest.TestCase):
@@ -55,25 +55,25 @@ class TestRegression(unittest.TestCase):
         assert data.X_train.shape[1] == data.X_test.shape[1]
         assert data.Y_train.shape[1] == data.Y_test.shape[1]
 
-    @data(*classification_datasets)
-    def test_classification(self, d):
-        data = ALL_CLASSIFICATION_DATATSETS[d]()
-
-        assert_almost_equal(np.average(np.concatenate([data.X_train, data.X_test], 0), 0),
-                            np.zeros(data.X_train.shape[1]))
-
-        assert_almost_equal(np.std(np.concatenate([data.X_train, data.X_test], 0), 0),
-                            np.ones(data.X_train.shape[1]),
-                            decimal=3)
-
-        K = len(list(set(np.concatenate([data.Y_train, data.Y_test], 0).astype(int).flatten())))
-
-        assert K == data.K
-
-        assert data.X_train.shape[0] == data.Y_train.shape[0]
-        assert data.X_test.shape[0] == data.Y_test.shape[0]
-        assert data.X_train.shape[1] == data.X_test.shape[1]
-        assert data.Y_train.shape[1] == data.Y_test.shape[1]
+    # @data(*classification_datasets)
+    # def test_classification(self, d):
+    #     data = ALL_CLASSIFICATION_DATATSETS[d]()
+    #
+    #     assert_almost_equal(np.average(np.concatenate([data.X_train, data.X_test], 0), 0),
+    #                         np.zeros(data.X_train.shape[1]))
+    #
+    #     assert_almost_equal(np.std(np.concatenate([data.X_train, data.X_test], 0), 0),
+    #                         np.ones(data.X_train.shape[1]),
+    #                         decimal=3)
+    #
+    #     K = len(list(set(np.concatenate([data.Y_train, data.Y_test], 0).astype(int).flatten())))
+    #
+    #     assert K == data.K
+    #
+    #     assert data.X_train.shape[0] == data.Y_train.shape[0]
+    #     assert data.X_test.shape[0] == data.Y_test.shape[0]
+    #     assert data.X_train.shape[1] == data.X_test.shape[1]
+    #     assert data.Y_train.shape[1] == data.Y_test.shape[1]
 
 
 if __name__ == '__main__':
