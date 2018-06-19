@@ -120,7 +120,7 @@ class ClassificationModel(object):
                                             num_latent=num_latent,
                                             minibatch_size=mb_size)
 
-            opt = gpflow.train.AdamOptimizer(self.ARGS.adam_lr)
+            self.opt = gpflow.train.AdamOptimizer(self.ARGS.adam_lr)
 
             self.sess = self.model.enquire_session()
             iters = self.ARGS.iterations
@@ -137,7 +137,7 @@ class ClassificationModel(object):
         self.model.q_mu.assign(np.zeros((self.ARGS.num_inducing, num_outputs)), session=self.sess)
         self.model.q_sqrt.assign(np.tile(np.eye(self.ARGS.num_inducing)[None], [num_outputs, 1, 1]), session=self.sess)
 
-        opt.minimize(self.model, maxiter=iters, session=self.sess)
+        self.opt.minimize(self.model, maxiter=iters, session=self.sess)
 
     def predict(self, Xs):
         m, v = self.model.predict_y(Xs, session=self.sess)

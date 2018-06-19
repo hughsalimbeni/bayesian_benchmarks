@@ -36,13 +36,14 @@ class RegressionModel(object):
             self.model = gpflow.models.SGPR(X, Y, kern, feat=Z)
             self.model.likelihood.variance = lik.variance.read_value()
             self.sess = self.model.enquire_session()
+            self.opt = gpflow.train.ScipyOptimizer()
 
         # we might have new data
         self.model.X.assign(X, session=self.sess)
         self.model.Y.assign(Y, session=self.sess)
         self.model.feature.Z.assign(Z, session=self.sess)
 
-        gpflow.train.ScipyOptimizer().minimize(self.model, session=self.sess, maxiter=self.ARGS.iterations)
+        self.opt.minimize(self.model, session=self.sess, maxiter=self.ARGS.iterations)
 
     def predict(self, Xs):
         return self.model.predict_y(Xs, session=self.sess)
@@ -95,7 +96,7 @@ class ClassificationModel(object):
                                             minibatch_size=mb_size)
 
             self.sess = self.model.enquire_session()
-            opt = gpflow.train.ScipyOptimizer()
+            self.opt = gpflow.train.ScipyOptimizer()
 
             iters = self.ARGS.iterations
 
@@ -111,7 +112,7 @@ class ClassificationModel(object):
         self.model.q_mu.assign(np.zeros((self.ARGS.num_inducing, num_outputs)), session=self.sess)
         self.model.q_sqrt.assign(np.tile(np.eye(self.ARGS.num_inducing)[None], [num_outputs, 1, 1]), session=self.sess)
 
-        opt.minimize(self.model, maxiter=iters, session=self.sess)
+        self.opt.minimize(self.model, maxiter=iters, session=self.sess)
 
     def predict(self, Xs):
         m, v = self.model.predict_y(Xs, session=self.sess)
