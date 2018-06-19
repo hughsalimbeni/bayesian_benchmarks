@@ -266,8 +266,6 @@ class Classification(Dataset):
         tar.extractall(path=os.path.join(DATA_PATH, 'classification_data'))
         tar.close()
 
-        os.remove(filename)
-
         logging.info('finished donwloading {} data'.format(self.name))
 
 
