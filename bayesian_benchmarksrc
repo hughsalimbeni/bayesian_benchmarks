@@ -1,6 +1,6 @@
 [paths]
-data_path = /data
-results_path = ./results
+data_path = ./data
+results_path = ./bayesian_benchmarks/results
 
 [seeds]
 seed = 0

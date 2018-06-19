@@ -34,6 +34,9 @@ for loc in locations:
 DATA_PATH = cfg['paths']['data_path']
 BASE_SEED = int(cfg['seeds']['seed'])
 
+if not os.path.isdir(DATA_PATH):
+    os.mkdir(DATA_PATH)
+
 ALL_REGRESSION_DATATSETS = {}
 ALL_CLASSIFICATION_DATATSETS = {}
 
