@@ -1,5 +1,5 @@
 """
-All the classification come in a single large download. If many tests are run in parallel this can cause 
+All the classification data come in a single large download. If many tests are run in parallel this can cause 
 issues of synchrony. We run this once on travis so the data is there.   
 """
 

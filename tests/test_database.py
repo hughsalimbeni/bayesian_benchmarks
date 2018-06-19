@@ -19,6 +19,7 @@ import os
 
 from bayesian_benchmarks.database_utils import Database
 
+
 class TestDatabase(unittest.TestCase):
     def setUp(self):
         self.data1 = {'a': '1', 'b': 1, 'c': 1., 'd': np.ones(1), 'e':'data1'}

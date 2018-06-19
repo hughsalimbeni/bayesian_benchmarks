@@ -13,11 +13,7 @@
 # limitations under the License.
 
 import unittest
-from numpy.testing import assert_almost_equal
-import numpy as np
 from ddt import ddt, data
-
-import os
 
 from bayesian_benchmarks.tasks.regression import run
 from bayesian_benchmarks.database_utils import Database
@@ -39,6 +35,7 @@ models = [
           'adaboost',
           'mlp',
           ]
+
 
 @ddt
 class TestRegression(unittest.TestCase):

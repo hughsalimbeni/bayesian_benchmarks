@@ -28,8 +28,6 @@ regression_datasets.remove('kin8nm')  # link appears broken temporarily
 classification_datasets = list(ALL_CLASSIFICATION_DATATSETS.keys())
 classification_datasets.sort()
 
-# to avoid parallel downloading of the classification datasets:
-ALL_CLASSIFICATION_DATATSETS['iris']()
 
 @ddt
 class TestRegression(unittest.TestCase):
