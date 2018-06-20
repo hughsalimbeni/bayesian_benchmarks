@@ -7,7 +7,7 @@ requirements = [
     'ddt',
 ]
 
-setup(name='gpflow',
+setup(name='bayesian_benchmarking',
       version='alpha',
       author="Hugh Salimbeni",
       author_email="hrs13@ic.ac.uk",
