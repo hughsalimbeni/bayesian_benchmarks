@@ -19,7 +19,7 @@ class RegressionModel(object):
                 small_iterations = 1
                 adam_lr = 0.01
                 gamma = 0.1
-                minibatch_size = 2
+                minibatch_size = 100
                 num_posterior_samples = 2
                 initial_likelihood_var = 0.01
         else:  # pragma: no cover
@@ -55,7 +55,7 @@ class RegressionModel(object):
             for _ in range(2):
                 kerns.append(gpflow.kernels.RBF(X.shape[1], lengthscales=float(X.shape[1])**0.5))
 
-            mb_size = self.ARGS.minibatch_size if X.shape[0] > 5000 else None
+            mb_size = self.ARGS.minibatch_size if X.shape[0] > self.ARGS.minibatch_size else None
 
             self.model = DGP(X, Y, Z, kerns, Lik(),
                              minibatch_size=mb_size,

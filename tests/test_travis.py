@@ -7,10 +7,7 @@ We also download the other datasets too, as travis sometimes fails if we don't d
 """
 
 from bayesian_benchmarks.data import ALL_CLASSIFICATION_DATATSETS, ALL_REGRESSION_DATATSETS
-import pytest
 
-@pytest.fixture(scope="session", autouse=True)
-def prelim_download(request):
-    ALL_CLASSIFICATION_DATATSETS['iris']()
-    for d in ALL_REGRESSION_DATATSETS:
-        ALL_REGRESSION_DATATSETS[d]()
+ALL_CLASSIFICATION_DATATSETS['iris']()
+for d in ALL_REGRESSION_DATATSETS:
+    ALL_REGRESSION_DATATSETS[d]()

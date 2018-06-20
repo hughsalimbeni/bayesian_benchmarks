@@ -86,7 +86,7 @@ class ClassificationModel(object):
                 iterations = 1
                 small_iterations = 1
                 adam_lr = 0.01
-                minibatch_size = 2
+                minibatch_size = 100
         else:  # pragma: no cover
             class ARGS:
                 num_inducing = 100
@@ -104,7 +104,7 @@ class ClassificationModel(object):
 
         if not self.model:
             # NB mb_size does not change once the model is created
-            mb_size = self.ARGS.minibatch_size if X.shape[0] > self.ARGS.minibatch_size else None
+            mb_size = self.ARGS.minibatch_size if X.shape[0] >= self.ARGS.minibatch_size else None
 
             if self.K == 2:
                 lik = gpflow.likelihoods.Bernoulli()
