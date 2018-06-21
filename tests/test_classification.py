@@ -12,55 +12,24 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import unittest
-from ddt import ddt, data
+import pytest
 
 from bayesian_benchmarks.tasks.classification import run
 from bayesian_benchmarks.database_utils import Database
+from bayesian_benchmarks.models.get_model import all_classification_models
 
 class Bunch(object):
     def __init__(self, adict):
         self.__dict__.update(adict)
 
-models = [
-          'linear',
-          'variationally_sparse_gp',
-          'variationally_sparse_gp_minibatch',
-          'deep_gp_doubly_stochastic',
-          'svm',
-          'naive_bayes',
-          'knn',
-          'decision_tree',
-          'random_forest',
-          'gradient_boosting_machine',
-          'adaboost',
-          'mlp',
-          ]
+@pytest.mark.parametrize('dataset', ['iris', 'planning'])  # binary and multiclass
+@pytest.mark.parametrize('model', all_classification_models)
+def test(model, dataset):
+    d = {'dataset':dataset,
+         'model' :  model,
+         'split' : 2**32 - 1}  # make sure not to use this seed for real experiments!
 
-@ddt
-class TestClassification(unittest.TestCase):
-    @data(*models)
-    def test_multi(self, model):
-        d = {'dataset':'iris',
-             'model' :  model,
-             'split' : 2**32 - 1}  # make sure not to use this seed for real experiments!
+    run(Bunch(d), is_test=True)
 
-        run(Bunch(d), is_test=True)
-
-        with Database() as db:
-            db.delete('classification', d)
-
-    @data(*models)
-    def test_binary(self, model):
-        d = {'dataset':'planning',
-             'model' :  model,
-             'split' : 2**32 - 1}  # make sure not to use this seed for real experiments!
-
-        run(Bunch(d), is_test=True)
-
-        with Database() as db:
-            db.delete('classification', d)
-
-
-if __name__ == '__main__':
-    unittest.main()
+    with Database() as db:
+        db.delete('classification', d)

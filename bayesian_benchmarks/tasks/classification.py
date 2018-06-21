@@ -12,12 +12,10 @@ sys.path.append('../')
 import argparse
 import numpy as np
 
-from importlib import import_module
-
 from scipy.stats import multinomial
 
 from bayesian_benchmarks.data import ALL_CLASSIFICATION_DATATSETS
-from bayesian_benchmarks.models.non_bayesian_models import non_bayesian_model
+from bayesian_benchmarks.models.get_model import get_classification_model
 from bayesian_benchmarks.database_utils import Database
 
 def parse_args():
@@ -38,11 +36,8 @@ def run(ARGS, is_test=False):
 
     Y_oh = onehot(data.Y_test, data.K)[None, :, :]  # 1, N_test, K
 
-    Model = non_bayesian_model(ARGS.model, 'classification') or\
-            import_module('bayesian_benchmarks.models.{}.models'.format(ARGS.model)).ClassificationModel
+    Model = get_classification_model(ARGS.model)
     model = Model(data.K, is_test=is_test)
-
-    # model = models.ClassificationModel(data.K)
     model.fit(data.X_train, data.Y_train)
     p = model.predict(data.X_test)  # N_test, K
 

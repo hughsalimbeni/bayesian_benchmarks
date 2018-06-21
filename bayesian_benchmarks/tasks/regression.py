@@ -8,11 +8,10 @@ Metrics reported are test log likelihood, mean squared error, and absolute error
 import argparse
 import numpy as np
 from scipy.stats import norm
-from importlib import import_module
 
 from bayesian_benchmarks.data import ALL_REGRESSION_DATATSETS
 from bayesian_benchmarks.database_utils import Database
-from bayesian_benchmarks.models.non_bayesian_models import non_bayesian_model
+from bayesian_benchmarks.models.get_model import get_regression_model
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -24,9 +23,7 @@ def parse_args():
 def run(ARGS, is_test=False):
     data = ALL_REGRESSION_DATATSETS[ARGS.dataset](split=ARGS.split)
 
-    Model = non_bayesian_model(ARGS.model, 'regression') or\
-            import_module('bayesian_benchmarks.models.{}.models'.format(ARGS.model)).RegressionModel
-
+    Model = get_regression_model(ARGS.model)
     model = Model(is_test=is_test)
     model.fit(data.X_train, data.Y_train)
     m, v = model.predict(data.X_test)
