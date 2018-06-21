@@ -10,10 +10,12 @@ import unittest
 from ddt import ddt, data
 from bayesian_benchmarks.data import ALL_CLASSIFICATION_DATATSETS, ALL_REGRESSION_DATATSETS
 
+regression_datasets = list(ALL_REGRESSION_DATATSETS.keys())
+regression_datasets.sort()
 
 @ddt
 class TestDownloadOnce(unittest.TestCase):
-    @data(*list(ALL_REGRESSION_DATATSETS.keys()))
+    @data(regression_datasets)
     def test_regression(self, d):
         ALL_REGRESSION_DATATSETS[d]()
 
