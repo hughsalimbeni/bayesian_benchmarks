@@ -16,7 +16,7 @@ regression_datasets.sort()
 @ddt
 class TestDownloadOnce(unittest.TestCase):
     @data(regression_datasets)
-    def test_regression(self, d):
+    def test_regression(self, *d):
         ALL_REGRESSION_DATATSETS[d]()
 
     def test_classification(self):
