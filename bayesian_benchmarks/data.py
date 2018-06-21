@@ -142,13 +142,13 @@ class Energy(Dataset):
         return data[:, :-1], data[:, -1].reshape(-1, 1)
 
 
-@add_regression
-class Kin8mn(Dataset):
-    N, D, name = 8192, 8, 'kin8nm'
-    url = 'http://mldata.org/repository/data/download/csv/uci-20070111-kin8nm'
-    def read_data(self):
-        data = pandas.read_csv(self.datapath, header=None).values
-        return data[:, :-1], data[:, -1].reshape(-1, 1)
+# @add_regression
+# class Kin8mn(Dataset):
+#     N, D, name = 8192, 8, 'kin8nm'
+#     url = 'http://mldata.org/repository/data/download/csv/uci-20070111-kin8nm'
+#     def read_data(self):
+#         data = pandas.read_csv(self.datapath, header=None).values
+#         return data[:, :-1], data[:, -1].reshape(-1, 1)
 
 
 @add_regression
