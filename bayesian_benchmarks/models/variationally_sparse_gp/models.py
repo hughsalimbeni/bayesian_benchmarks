@@ -48,11 +48,11 @@ class RegressionModel(object):
     def predict(self, Xs):
         return self.model.predict_y(Xs, session=self.sess)
 
-    def sample(self, Xs, num_samples):
-        m, v = self.predict(Xs, session=self.sess)
-        N, D = np.shape(m)
-        m, v = np.expand_dims(m, 0), np.expand_dims(v, 0)
-        return m + np.random.randn(num_samples, N, D) * (v ** 0.5)
+    # def sample(self, Xs, num_samples):
+    #     m, v = self.predict(Xs, session=self.sess)
+    #     N, D = np.shape(m)
+    #     m, v = np.expand_dims(m, 0), np.expand_dims(v, 0)
+    #     return m + np.random.randn(num_samples, N, D) * (v ** 0.5)
 
 
 class ClassificationModel(object):
