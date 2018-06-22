@@ -23,10 +23,9 @@ from bayesian_benchmarks.models.template import ClassificationModel as Classific
 from bayesian_benchmarks.models.get_model import all_regression_models, all_classification_models
 from bayesian_benchmarks.models.get_model import get_regression_model, get_classification_model
 
-
 @pytest.mark.parametrize('name', all_regression_models)
 def test_models_regression(name):
-    S, N, Ns, D = 5, 4, 3, 2
+    S, N, Ns, D = 5, 500, 3, 2
 
     model = get_regression_model(name)(is_test=True)
     model.fit(np.random.randn(N, D), np.random.randn(N, 1))
@@ -42,7 +41,7 @@ def test_models_regression(name):
 @pytest.mark.parametrize('name', all_classification_models)
 @pytest.mark.parametrize('K', [2, 3])
 def test_models_regression(name, K):
-    S, N, Ns, D = 2, 100, 2, 2
+    S, N, Ns, D = 2, 500, 2, 2
 
     model = get_classification_model(name)(K, is_test=True)
     model.fit(np.random.randn(N, D), np.random.choice(range(K), size=(N, 1)).astype(float))
