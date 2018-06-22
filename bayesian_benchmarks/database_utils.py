@@ -121,9 +121,9 @@ def dict_to_lists(d : dict):
 def infer_type(val):
     """
     The sqlite type of val
-    
+
     :param val: either a string, float, int, or np.ndarray
-    :return: 'text', 'real' or 'array'
+    :return: 'text', 'real', 'int' or 'array'
     """
     if isinstance(val, str):
         return 'text'

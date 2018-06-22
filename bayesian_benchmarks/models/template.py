@@ -22,7 +22,7 @@ import numpy as np
 
 
 class RegressionModel:
-    def __init__(self, is_test=False):
+    def __init__(self, is_test=False, seed=0):
         """
         If is_test is True your model should train and predict in a few seconds (i.e. suitable for travis)
         """
@@ -58,7 +58,7 @@ class RegressionModel:
 
 
 class ClassificationModel:
-    def __init__(self, K, is_test=False):
+    def __init__(self, K, is_test=False, seed=0):
         """
         :param K: number of classes
         :param is_test: whether to run quickly for testing purposes

@@ -12,62 +12,58 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import inspect
-import os
+import pytest
+
+import numpy as np
+from numpy.testing import assert_allclose
 
 from bayesian_benchmarks.models.template import RegressionModel as RegressionTemplate
 from bayesian_benchmarks.models.template import ClassificationModel as ClassificationTemplate
-import bayesian_benchmarks
-from bayesian_benchmarks.models.get_model import all_regression_models, all_classification_models, sklearn_models
+
+from bayesian_benchmarks.models.get_model import all_regression_models, all_classification_models
 from bayesian_benchmarks.models.get_model import get_regression_model, get_classification_model
 
-abs_path = bayesian_benchmarks.models.template.__file__[:-len('/template.py')]
 
-def test_regression():
-    """
-    Test that all the implemented models do actually implement the methods of the template models
-    """
+@pytest.mark.parametrize('name', all_regression_models)
+def test_models_regression(name):
+    S, N, Ns, D = 5, 4, 3, 2
 
-    attributes = inspect.getmembers(RegressionTemplate)
-    methods = ([a[0] for a in attributes if not(a[0].startswith('__') and a[0].endswith('__'))])
+    model = get_regression_model(name)(is_test=True)
+    model.fit(np.random.randn(N, D), np.random.randn(N, 1))
+    model.fit(np.random.randn(N, D), np.random.randn(N, 1))
+    m, v = model.predict(np.random.randn(Ns, D))
+    assert m.shape == (Ns, 1)
+    assert v.shape == (Ns, 1)
 
-    names = [f for f in os.listdir(abs_path) if
-             ((not f.endswith('__')) and os.path.isdir(os.path.join(abs_path, f)))]
-
-    successes = []
-    for name in names:
-        try:
-            M = get_regression_model(name)
-            successes.append(name)
-        except:
-            M = None
-
-        if M:
-            for m in methods:
-                if not hasattr(M(is_test=True), m):
-                    raise NotImplementedError('{} is missing the {} method'.format(M, m))
-
-    assert set(successes) == set(all_regression_models) - set(sklearn_models)
-
-def test_classification():
-    attributes = inspect.getmembers(ClassificationTemplate)
-
-    methods = ([a[0] for a in attributes if not(a[0].startswith('__') and a[0].endswith('__'))])
-    names = [f for f in os.listdir(abs_path) if
-             ((not f.endswith('__')) and os.path.isdir(os.path.join(abs_path, f)))]
-
-    successes = []
-    for name in names:
-        try:
-            M = get_classification_model(name)
-            successes.append(name)
-        except:
-            M = None
-
-        if M:
-            for m in methods:
-                if not hasattr(M(2, is_test=True), m):
-                    raise NotImplementedError('{} is missing the {} method'.format(M, m))
+    samples = model.sample(np.random.randn(Ns, D), S)
+    assert samples.shape == (S, Ns, 1)
 
 
-    assert set(successes) == set(all_classification_models) - set(sklearn_models)
+@pytest.mark.parametrize('name', all_classification_models)
+@pytest.mark.parametrize('K', [2, 3])
+def test_models_regression(name, K):
+    S, N, Ns, D = 2, 100, 2, 2
+
+    model = get_classification_model(name)(K, is_test=True)
+    model.fit(np.random.randn(N, D), np.random.choice(range(K), size=(N, 1)).astype(float))
+    model.fit(np.random.randn(N, D), np.random.choice(range(K), size=(N, 1)).astype(float))
+    p = model.predict(np.random.randn(Ns, D))
+    assert p.shape == (Ns, K)
+    assert_allclose(np.sum(p, 1), np.ones(Ns), atol=0.001)
+
+
+def test_templates():
+    regression_model = RegressionTemplate()
+    classification_model = ClassificationTemplate(2)
+
+    regression_model.fit(np.ones((1, 1)), np.ones((1, 1)))
+    classification_model.fit(np.ones((1, 1)), np.ones((1, 1)))
+
+    with pytest.raises(NotImplementedError):
+        regression_model.predict(np.ones((1, 1)))
+
+    with pytest.raises(NotImplementedError):
+        classification_model.predict(np.ones((1, 1)))
+
+    with pytest.raises(NotImplementedError):
+        regression_model.sample(np.ones((1, 1)), 1)

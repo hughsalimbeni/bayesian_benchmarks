@@ -45,15 +45,3 @@ all_classification_models = [
     ]
 
 all_models = list(set(all_regression_models).union(all_classification_models))
-
-sklearn_models = [
-    'linear',
-    'svm',
-    'naive_bayes',
-    'knn',
-    'decision_tree',
-    'random_forest',
-    'gradient_boosting_machine',
-    'adaboost',
-    'mlp',
-    ]

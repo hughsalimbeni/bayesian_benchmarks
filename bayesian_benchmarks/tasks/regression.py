@@ -9,22 +9,24 @@ import argparse
 import numpy as np
 from scipy.stats import norm
 
-from bayesian_benchmarks.data import ALL_REGRESSION_DATATSETS
+from bayesian_benchmarks.data import get_regression_data
 from bayesian_benchmarks.database_utils import Database
 from bayesian_benchmarks.models.get_model import get_regression_model
 
-def parse_args():
+def parse_args():  # pragma: no cover
     parser = argparse.ArgumentParser()
-    parser.add_argument("--model", default='deep_gp_doubly_stochastic', nargs='?', type=str)
+    parser.add_argument("--model", default='linear', nargs='?', type=str)
     parser.add_argument("--dataset", default='energy', nargs='?', type=str)
     parser.add_argument("--split", default=0, nargs='?', type=int)
+    parser.add_argument("--seed", default=0, nargs='?', type=int)
+    parser.add_argument("--database_path", default='', nargs='?', type=str)
     return parser.parse_args()
 
 def run(ARGS, is_test=False):
-    data = ALL_REGRESSION_DATATSETS[ARGS.dataset](split=ARGS.split)
+    data = get_regression_data(ARGS.dataset, split=ARGS.split)
 
     Model = get_regression_model(ARGS.model)
-    model = Model(is_test=is_test)
+    model = Model(is_test=is_test, seed=ARGS.seed)
     model.fit(data.X_train, data.Y_train)
     m, v = model.predict(data.X_test)
 
@@ -47,8 +49,9 @@ def run(ARGS, is_test=False):
 
     res.update(ARGS.__dict__)
 
-    with Database() as db:
-        db.write('regression', res)
+    if not is_test:  # pragma: no cover
+        with Database(ARGS.database_path) as db:
+            db.write('regression', res)
 
 
 if __name__ == '__main__':
