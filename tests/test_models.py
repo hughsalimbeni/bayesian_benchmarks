@@ -42,7 +42,7 @@ def test_models_regression(name, N):
 @pytest.mark.parametrize('name', all_classification_models)
 @pytest.mark.parametrize('K', [2, 3])
 @pytest.mark.parametrize('N', [100, 6000])
-def test_models_regression(name, K, N):
+def test_models_classification(name, K, N):
     S, Ns, D = 4, 3, 2
 
     model = get_classification_model(name)(K, is_test=True)
