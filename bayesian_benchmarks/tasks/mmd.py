@@ -15,7 +15,7 @@ from bayesian_benchmarks.data import get_regression_data
 
 import gpflow
 
-def parse_args():  #prama: no cover
+def parse_args():  #pragma: no cover
     parser = argparse.ArgumentParser()
     parser.add_argument("--model", default='variationally_sparse_gp', nargs='?', type=str)
     parser.add_argument("--dataset", default='yacht', nargs='?', type=str)

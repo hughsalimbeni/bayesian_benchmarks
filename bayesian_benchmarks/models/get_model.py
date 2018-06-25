@@ -44,4 +44,4 @@ all_classification_models = [
     'mlp',
     ]
 
-all_models = list(set(all_regression_models).union(all_classification_models))
+all_models = list(set(all_regression_models).union(set(all_classification_models)))

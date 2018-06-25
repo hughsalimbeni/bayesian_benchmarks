@@ -61,7 +61,7 @@ def run(ARGS, is_test=False):
 
     res.update(ARGS.__dict__)
 
-    if not is_test:  # prgama: no cover
+    if not is_test:  # pragma: no cover
         with Database(ARGS.database_path) as db:
             db.write('classification', res)
 
