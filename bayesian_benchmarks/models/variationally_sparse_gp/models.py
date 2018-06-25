@@ -78,9 +78,6 @@ class ClassificationModel(object):
         Z = kmeans2(X, self.ARGS.num_inducing, minit='points')[0] if X.shape[0] > self.ARGS.num_inducing else X.copy()
 
         if not self.model:
-            # NB mb_size does not change once the model is created
-            mb_size = self.ARGS.minibatch_size if X.shape[0] > 5000 else None
-
             if self.K == 2:
                 lik = gpflow.likelihoods.Bernoulli()
                 num_latent = 1
@@ -93,7 +90,7 @@ class ClassificationModel(object):
                                             feat=Z,
                                             whiten=False,
                                             num_latent=num_latent,
-                                            minibatch_size=mb_size)
+                                            minibatch_size=None)
 
             self.sess = self.model.enquire_session()
             self.opt = gpflow.train.ScipyOptimizer()
