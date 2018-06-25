@@ -4,7 +4,7 @@ from scipy.cluster.vq import kmeans2
 from scipy.stats import norm
 
 class RegressionModel(object):
-    def __init__(self, is_test=False):
+    def __init__(self, is_test=False, seed=0):
         if is_test:
             class ARGS:
                 num_inducing = 2
@@ -14,7 +14,7 @@ class RegressionModel(object):
         else:  # pragma: no cover
             class ARGS:
                 num_inducing = 100
-                iterations = 5000
+                iterations = 10000
                 small_iterations = 1000
                 initial_likelihood_var = 0.01
         self.ARGS = ARGS
@@ -49,14 +49,14 @@ class RegressionModel(object):
         return self.model.predict_y(Xs, session=self.sess)
 
     def sample(self, Xs, num_samples):
-        m, v = self.predict(Xs, session=self.sess)
+        m, v = self.predict(Xs)
         N, D = np.shape(m)
         m, v = np.expand_dims(m, 0), np.expand_dims(v, 0)
         return m + np.random.randn(num_samples, N, D) * (v ** 0.5)
 
 
 class ClassificationModel(object):
-    def __init__(self, K, is_test):
+    def __init__(self, K, is_test=False, seed=0):
         if is_test:
             class ARGS:
                 num_inducing = 2
@@ -78,9 +78,6 @@ class ClassificationModel(object):
         Z = kmeans2(X, self.ARGS.num_inducing, minit='points')[0] if X.shape[0] > self.ARGS.num_inducing else X.copy()
 
         if not self.model:
-            # NB mb_size does not change once the model is created
-            mb_size = self.ARGS.minibatch_size if X.shape[0] > 5000 else None
-
             if self.K == 2:
                 lik = gpflow.likelihoods.Bernoulli()
                 num_latent = 1
@@ -93,7 +90,7 @@ class ClassificationModel(object):
                                             feat=Z,
                                             whiten=False,
                                             num_latent=num_latent,
-                                            minibatch_size=mb_size)
+                                            minibatch_size=None)
 
             self.sess = self.model.enquire_session()
             self.opt = gpflow.train.ScipyOptimizer()

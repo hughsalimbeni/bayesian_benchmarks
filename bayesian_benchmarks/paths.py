@@ -10,8 +10,6 @@ for loc in locations:
     if cfg.read(os.path.join(loc, 'bayesian_benchmarksrc')):
         break
 
-print(os.path.dirname(os.path.realpath(__file__)))
-
 def expand_to_absolute(path):
     if './' == path[:2]:
         return os.path.join(os.path.dirname(os.path.realpath(__file__)), path[2:])

@@ -1,11 +1,10 @@
-import sys
-sys.path.append('../tasks')
-
-from bayesian_benchmarks.data import ALL_REGRESSION_DATATSETS, ALL_CLASSIFICATION_DATATSETS
+from bayesian_benchmarks.data import regression_datasets, classification_datasets
+from bayesian_benchmarks.database_utils import Database
 
 import itertools
 import os
 from subprocess import call
+
 
 def make_experiment_combinations(combinations: list):
     """
@@ -105,11 +104,23 @@ def make_condor_jobs(script: str, experiments: list, overwrite=False):
             t += '\nQueue 1\n'
             f.write(t)
 
+def remove_already_run_experiments(table, experiments):
+    res = []
+
+    with Database() as db:
+        for e in experiments:
+            if len(db.read(table, ['test_loglik'], e)) == 0:
+                res.append(e)
+
+    s = 'originally {} experiments, but {} have already been run, so running {} experiments'
+    print(s.format(len(experiments), len(experiments) - len(res), len(res)))
+    return res
 
 #################################################
 models = [
           'linear',
           'variationally_sparse_gp',
+          'variationally_sparse_gp_minibatch',
           'deep_gp_doubly_stochastic',
           'svm',
           'knn',
@@ -124,10 +135,11 @@ models = [
 
 ############# Regression
 combinations = []
-combinations.append({'dataset' : list(ALL_REGRESSION_DATATSETS.keys())})
-combinations.append({'split' : [0]})
+combinations.append({'dataset' : regression_datasets})
+combinations.append({'split' : range(10)})
 combinations.append({'model' : models})
 experiments = make_experiment_combinations(combinations)
+experiments = remove_already_run_experiments('regression', experiments)
 
 make_local_jobs('../tasks/regression', experiments, overwrite=True)
 make_condor_jobs('../tasks/regression', experiments, overwrite=True)
@@ -140,14 +152,15 @@ make_condor_jobs('../tasks/regression', experiments, overwrite=True)
 
 ############# Classification
 combinations = []
-combinations.append({'dataset' : list(ALL_CLASSIFICATION_DATATSETS.keys())})
-combinations.append({'split' : [0]})
+combinations.append({'dataset' : classification_datasets})
+combinations.append({'split' : range(10)})
 combinations.append({'model' : models})
 
 experiments = make_experiment_combinations(combinations)
+experiments = remove_already_run_experiments('classification', experiments)
 
-# make_local_jobs('../tasks/classification', experiments)
-# make_condor_jobs('../tasks/classification', experiments)
-
-# make_local_jobs('../tasks/active_learning_discrete', experiments)
-# make_condor_jobs('../tasks/active_learning_discrete', experiments)
+make_local_jobs('../tasks/classification', experiments)
+make_condor_jobs('../tasks/classification', experiments)
+#
+# # make_local_jobs('../tasks/active_learning_discrete', experiments)
+# # make_condor_jobs('../tasks/active_learning_discrete', experiments)

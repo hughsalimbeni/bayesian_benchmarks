@@ -10,7 +10,7 @@ from sklearn import neural_network
 
 def regression_model(model):
     class SKLWrapperRegression(object):
-        def __init__(self, is_test=False):
+        def __init__(self, is_test=False, seed=0):
             self.model = model
 
         def fit(self, X, Y):
@@ -32,7 +32,7 @@ def regression_model(model):
 
 def classification_model(model):
     class SKLWrapperClassification(object):
-        def __init__(self, K, is_test=False):
+        def __init__(self, K, is_test=False, seed=0):
             self.model = model
             self.K = K
 
@@ -106,5 +106,5 @@ def non_bayesian_model(name, task):
     elif name == 'mlp' and task == 'classification':
         return classification_model(neural_network.MLPClassifier())
 
-    else:
+    else:  # pragma: no cover
         return None

@@ -11,7 +11,7 @@ from scipy.special import logsumexp
 
 
 class RegressionModel(object):
-    def __init__(self, is_test=False):
+    def __init__(self, is_test=False, seed=0):
         if is_test:
             class ARGS:
                 num_inducing = 2
@@ -25,7 +25,7 @@ class RegressionModel(object):
         else:  # pragma: no cover
             class ARGS:
                 num_inducing = 100
-                iterations = 5000
+                iterations = 10000
                 small_iterations = 1000
                 adam_lr = 0.01
                 gamma = 0.1
@@ -129,9 +129,9 @@ class RegressionModel(object):
 
 
 class ClassificationModel(RegressionModel):
-    def __init__(self, K, is_test=False):
+    def __init__(self, K, is_test=False, seed=0):
         self.K = K
-        RegressionModel.__init__(self, is_test=is_test)
+        RegressionModel.__init__(self, is_test=is_test, seed=seed)
 
     def fit(self, X, Y):
         if self.K == 2:

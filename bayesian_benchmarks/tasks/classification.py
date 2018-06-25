@@ -12,37 +12,31 @@ sys.path.append('../')
 import argparse
 import numpy as np
 
-from importlib import import_module
-
 from scipy.stats import multinomial
 
-from bayesian_benchmarks.data import ALL_CLASSIFICATION_DATATSETS
-from bayesian_benchmarks.models.non_bayesian_models import non_bayesian_model
+from bayesian_benchmarks.data import get_classification_data
+from bayesian_benchmarks.models.get_model import get_classification_model
 from bayesian_benchmarks.database_utils import Database
 
-def parse_args():
+def parse_args():  # pragma: no cover
     parser = argparse.ArgumentParser()
     parser.add_argument("--model", default='variationally_sparse_gp', nargs='?', type=str)
     parser.add_argument("--dataset", default='statlog-german-credit', nargs='?', type=str)
     parser.add_argument("--split", default=0, nargs='?', type=int)
+    parser.add_argument("--seed", default=0, nargs='?', type=int)
+    parser.add_argument("--database_path", default='', nargs='?', type=str)
     return parser.parse_args()
 
 def run(ARGS, is_test=False):
-    data = ALL_CLASSIFICATION_DATATSETS[ARGS.dataset]()
+    data = get_classification_data(ARGS.dataset, split=ARGS.split)
 
     def onehot(Y, K):
-        ret = np.zeros((len(Y), K))
-        for k in range(K):
-            ret[Y.flatten()==k, k] = 1.
-        return ret
+        return np.eye(K)[Y.flatten().astype(int)].reshape(Y.shape[:-1]+(K,))
 
     Y_oh = onehot(data.Y_test, data.K)[None, :, :]  # 1, N_test, K
 
-    Model = non_bayesian_model(ARGS.model, 'classification') or\
-            import_module('bayesian_benchmarks.models.{}.models'.format(ARGS.model)).ClassificationModel
-    model = Model(data.K, is_test=is_test)
-
-    # model = models.ClassificationModel(data.K)
+    Model = get_classification_model(ARGS.model)
+    model = Model(data.K, is_test=is_test, seed=ARGS.seed)
     model.fit(data.X_train, data.Y_train)
     p = model.predict(data.X_test)  # N_test, K
 
@@ -62,13 +56,14 @@ def run(ARGS, is_test=False):
 
     res['test_acc'] = np.average(np.array(pred == data.Y_test.flatten()).astype(float))
 
-    res['Y_test'] = data.Y_test
-    res['p_test'] = p
+    # res['Y_test'] = data.Y_test
+    # res['p_test'] = p
 
     res.update(ARGS.__dict__)
 
-    with Database() as db:
-        db.write('classification', res)
+    if not is_test:  # pragma: no cover
+        with Database(ARGS.database_path) as db:
+            db.write('classification', res)
 
 
 if __name__ == '__main__':

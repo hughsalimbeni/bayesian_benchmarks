@@ -11,22 +11,22 @@ import numpy as np
 from scipy.stats import norm
 from importlib import import_module
 
-from bayesian_benchmarks.data import ALL_REGRESSION_DATATSETS
+from bayesian_benchmarks.data import get_regression_data
 from bayesian_benchmarks.database_utils import Database
 from bayesian_benchmarks.models.non_bayesian_models import non_bayesian_model
 
-def parse_args():
+def parse_args():  # pragma: no cover
     parser = argparse.ArgumentParser()
     parser.add_argument("--model", default='variationally_sparse_gp', nargs='?', type=str)
     parser.add_argument("--dataset", default='boston', nargs='?', type=str)
     parser.add_argument("--split", default=0, nargs='?', type=int)
+    parser.add_argument("--seed", default=0, nargs='?', type=int)
     parser.add_argument("--iterations", default=10, nargs='?', type=int)
     parser.add_argument("--num_initial_points", default=3, nargs='?', type=int)
     return parser.parse_args()
 
 def run(ARGS, is_test):
-
-    data = ALL_REGRESSION_DATATSETS[ARGS.dataset](split=ARGS.split, prop=1.)
+    data = get_regression_data(ARGS.dataset, split=ARGS.split, prop=1.)
 
     ind = np.zeros(data.X_train.shape[0]).astype(bool)
     ind[:ARGS.num_initial_points] = True
@@ -35,7 +35,7 @@ def run(ARGS, is_test):
 
     Model = non_bayesian_model(ARGS.model, 'regression') or\
             import_module('bayesian_benchmarks.models.{}.models'.format(ARGS.model)).RegressionModel
-    model = Model(is_test=is_test)
+    model = Model(is_test=is_test, seed=ARGS.seed)
 
     test_ll = []
     train_ll = []
@@ -79,8 +79,9 @@ def run(ARGS, is_test):
          }
     res.update(ARGS.__dict__)
 
-    with Database() as db:
-        db.write('active_learning_continuous', res)
+    if not is_test:  # pragma: no cover
+        with Database() as db:
+            db.write('active_learning_continuous', res)
 
 if __name__ == '__main__':
     run(parse_args())

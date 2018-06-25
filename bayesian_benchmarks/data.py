@@ -23,15 +23,15 @@ import zipfile
 
 from bayesian_benchmarks.paths import DATA_PATH, BASE_SEED
 
-ALL_REGRESSION_DATATSETS = {}
-ALL_CLASSIFICATION_DATATSETS = {}
+_ALL_REGRESSION_DATATSETS = {}
+_ALL_CLASSIFICATION_DATATSETS = {}
 
 def add_regression(C):
-    ALL_REGRESSION_DATATSETS.update({C.name:C})
+    _ALL_REGRESSION_DATATSETS.update({C.name:C})
     return C
 
 def add_classficiation(C):
-    ALL_CLASSIFICATION_DATATSETS.update({C.name:C})
+    _ALL_CLASSIFICATION_DATATSETS.update({C.name:C})
     return C
 
 def normalize(X):
@@ -96,7 +96,7 @@ class Dataset(object):
             zip_ref.extractall(self.datadir)
             zip_ref.close()
 
-            os.remove(filename)
+            # os.remove(filename)
 
         logging.info('finished donwloading {} data'.format(self.name))
 
@@ -142,13 +142,13 @@ class Energy(Dataset):
         return data[:, :-1], data[:, -1].reshape(-1, 1)
 
 
-@add_regression
-class Kin8mn(Dataset):
-    N, D, name = 8192, 8, 'kin8nm'
-    url = 'http://mldata.org/repository/data/download/csv/uci-20070111-kin8nm'
-    def read_data(self):
-        data = pandas.read_csv(self.datapath, header=None).values
-        return data[:, :-1], data[:, -1].reshape(-1, 1)
+# @add_regression
+# class Kin8mn(Dataset):
+#     N, D, name = 8192, 8, 'kin8nm'
+#     url = 'http://mldata.org/repository/data/download/csv/uci-20070111-kin8nm'
+#     def read_data(self):
+#         data = pandas.read_csv(self.datapath, header=None).values
+#         return data[:, :-1], data[:, -1].reshape(-1, 1)
 
 
 @add_regression
@@ -396,3 +396,15 @@ for name, N, D, K in classification_datasets:
     @add_classficiation
     class C(Classification):
         name, N, D, K = name, N, D, K
+
+regression_datasets = list(_ALL_REGRESSION_DATATSETS.keys())
+regression_datasets.sort()
+
+classification_datasets = list(_ALL_CLASSIFICATION_DATATSETS.keys())
+classification_datasets.sort()
+
+def get_regression_data(name, *args, **kwargs):
+    return _ALL_REGRESSION_DATATSETS[name](*args, **kwargs)
+
+def get_classification_data(name, *args, **kwargs):
+    return _ALL_CLASSIFICATION_DATATSETS[name](*args, **kwargs)
