@@ -106,5 +106,5 @@ def non_bayesian_model(name, task):
     elif name == 'mlp' and task == 'classification':
         return classification_model(neural_network.MLPClassifier())
 
-    else:
+    else:  # pragma: no cover
         return None

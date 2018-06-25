@@ -18,7 +18,7 @@ from bayesian_benchmarks.data import get_classification_data
 from bayesian_benchmarks.models.get_model import get_classification_model
 from bayesian_benchmarks.database_utils import Database
 
-def parse_args():
+def parse_args():  # pragma: no cover
     parser = argparse.ArgumentParser()
     parser.add_argument("--model", default='variationally_sparse_gp', nargs='?', type=str)
     parser.add_argument("--dataset", default='statlog-german-credit', nargs='?', type=str)
@@ -56,8 +56,8 @@ def run(ARGS, is_test=False):
 
     res['test_acc'] = np.average(np.array(pred == data.Y_test.flatten()).astype(float))
 
-    res['Y_test'] = data.Y_test
-    res['p_test'] = p
+    # res['Y_test'] = data.Y_test
+    # res['p_test'] = p
 
     res.update(ARGS.__dict__)
 

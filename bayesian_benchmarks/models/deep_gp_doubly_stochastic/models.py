@@ -25,7 +25,7 @@ class RegressionModel(object):
         else:  # pragma: no cover
             class ARGS:
                 num_inducing = 100
-                iterations = 5000
+                iterations = 10000
                 small_iterations = 1000
                 adam_lr = 0.01
                 gamma = 0.1

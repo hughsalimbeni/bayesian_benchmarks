@@ -15,7 +15,7 @@ from bayesian_benchmarks.data import get_classification_data
 from bayesian_benchmarks.database_utils import Database
 from bayesian_benchmarks.models.get_model import get_classification_model
 
-def parse_args():
+def parse_args():  # pragma: no cover
     parser = argparse.ArgumentParser()
     parser.add_argument("--model", default='variationally_sparse_gp', nargs='?', type=str)
     parser.add_argument("--dataset", default='statlog-landsat', nargs='?', type=str)

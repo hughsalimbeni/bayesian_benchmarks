@@ -15,7 +15,7 @@ from bayesian_benchmarks.data import get_regression_data
 from bayesian_benchmarks.database_utils import Database
 from bayesian_benchmarks.models.non_bayesian_models import non_bayesian_model
 
-def parse_args():
+def parse_args():  # pragma: no cover
     parser = argparse.ArgumentParser()
     parser.add_argument("--model", default='variationally_sparse_gp', nargs='?', type=str)
     parser.add_argument("--dataset", default='boston', nargs='?', type=str)
@@ -79,8 +79,9 @@ def run(ARGS, is_test):
          }
     res.update(ARGS.__dict__)
 
-    with Database() as db:
-        db.write('active_learning_continuous', res)
+    if not is_test:  # pragma: no cover
+        with Database() as db:
+            db.write('active_learning_continuous', res)
 
 if __name__ == '__main__':
     run(parse_args())
