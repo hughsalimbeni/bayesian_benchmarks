@@ -397,6 +397,58 @@ for name, N, D, K in classification_datasets:
     class C(Classification):
         name, N, D, K = name, N, D, K
 
+
+
+@add_regression
+class NYTaxi(Dataset):
+    N, D, name = 1457985, 11, 'nytaxi'
+    def read_data(self):
+        data = pandas.read_csv(self.datapath).values
+        float_cols = data[:, [5, 6, 7, 8, 10]]
+
+        ind = np.ones(len(data)).astype(bool)
+        ind[data[:, 5] < -74.1] = False
+        ind[data[:, 5] > -73.7] = False
+        ind[data[:, 6] < 40.6] = False
+        ind[data[:, 6] > 40.9] = False
+
+        # from datetime import datetime
+
+        # d = datetime.utcfromtimestamp(0)
+        # a = np.array(['2016-03-14 17:24:56', '2016-03-14 17:24:57'])
+        #
+        # dd = datetime.strptime(a, "%Y-%m-%d %H:%M:%S")
+        # # dd = datetime.strptime('2016-03-14 17:24:57', "%Y-%m-%d %H:%M:%S")
+        #
+        # print(dd.timestamp())
+
+
+        # date_cols = data[:, [2, 3]]
+
+        data = float_cols[ind, :].astype(float)
+        # print(data.shape)
+        # data_cols_float = pandas.to_datetime(date_cols.flatten())
+
+        return data[:, :-1], data[:, -1].reshape(-1, 1)
+
+    @property
+    def datapath(self):
+        filename = 'train.csv'
+        return os.path.join(self.datadir, filename)
+
+
+    def download(self):
+        raise NotImplementedError
+
+    def preprocess_data(self, X, Y):
+        X, self.X_mean, self.X_std = normalize(X)
+        Y, self.Y_mean, self.Y_std = normalize(Y)
+        return X, Y
+
+
+
+##########################
+
 regression_datasets = list(_ALL_REGRESSION_DATATSETS.keys())
 regression_datasets.sort()
 
