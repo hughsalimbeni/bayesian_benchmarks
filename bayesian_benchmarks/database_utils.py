@@ -1,6 +1,10 @@
-import sqlite3
-import numpy as np
+import backoff
 import io
+import numpy as np
+import os
+import sqlite3
+
+from pathlib import Path
 
 from bayesian_benchmarks.paths import RESULTS_DB_PATH
 
@@ -20,6 +24,10 @@ def convert_array(text):
     out.seek(0)
     return np.load(out)
 
+def touch(fname):
+    with open(fname, 'a'):
+        os.utime(fname)
+
 # Converts np.array to TEXT when inserting
 sqlite3.register_adapter(np.ndarray, adapt_array)
 
@@ -31,15 +39,29 @@ class Database:
     def __init__(self, name=None):
         self.conn = None
         self.cursor = None
-        name = name or RESULTS_DB_PATH
+        self.name = name or RESULTS_DB_PATH
+        self.lock_file_path = Path(os.path.join("/tmp/", self.name + "-lockfile"))
 
-        self.open(name)
-
+    @backoff.on_exception(backoff.expo, sqlite3.OperationalError, max_tries=10)
     def open(self, name):
+
+        # We (try) to prevent the event of multiple experiments
+        # writing to the database concurrently. Sqlite3 does not support
+        # this and would leave the result database in a bad state.
+        # An experiment gets the mutex over the database by creating a lockfile.
+        # Therefore, when the file exist, other experiments won't try
+        # to write to the DB and will wait using an exponential backoff mechanism.
+        # Note that this mechanism is not bulletproof, and race conditions or
+        # other cuncurrency problems can still occur.
+        if self.lock_file_path.is_file():
+            raise sqlite3.OperationalError("Database is busy")
+        else:
+            touch(self.lock_file_path)
+        # --- End mutex code ---
+
         try:
             self.conn = sqlite3.connect(name, detect_types=sqlite3.PARSE_DECLTYPES)
             self.cursor = self.conn.cursor()
-
         except sqlite3.Error as e:  # pragma: no cover
             print("Error connecting to database!")
 
@@ -48,6 +70,9 @@ class Database:
             self.conn.commit()
             self.cursor.close()
             self.conn.close()
+
+        # delete lock file (i.e. release mutex)
+        os.remove(self.lock_file_path)
 
     def delete(self, table, delete_dict):
         keys, vals = dict_to_lists(delete_dict)
@@ -59,11 +84,11 @@ class Database:
     def read(self, table_name : str, fields_to_return : list, search_dict : dict, limit=None):
         """
         Read the database
-        :param table_name: table to search 
+        :param table_name: table to search
         :param fields_to_return: list of fields to return
         :param search_dict: dict of fields to match and the values
-        :param limit: limit of number of values to return 
-        :return: 
+        :param limit: limit of number of values to return
+        :return:
         """
         keys, vals = dict_to_lists(search_dict)
         t = ' AND '.join(['{}=?'.format(k) for k in keys])
@@ -77,7 +102,7 @@ class Database:
     def check_table_has_columns(self, table_name : str):
         """
         True if the table has any columns, False otherwise
-        :param table_name: name of table to check  
+        :param table_name: name of table to check
         :return: bool
         """
         self.cursor.execute('PRAGMA table_info({})'.format(table_name))
@@ -85,12 +110,12 @@ class Database:
 
     def write(self, table_name, results_dict):
         """
-        Writes a row in the table, creating the columns if necessary inferring the types. It is assumed that 
+        Writes a row in the table, creating the columns if necessary inferring the types. It is assumed that
         the values are either strings, floats or numpy arrays
-        
-        :param table_name: name of table to update 
+
+        :param table_name: name of table to update
         :param results_dict: a dictionary of results
-        :return: 
+        :return:
         """
         keys, values = dict_to_lists(results_dict)
         if not self.check_table_has_columns(table_name):
@@ -106,12 +131,13 @@ class Database:
         self.close()
 
     def __enter__(self):
+        self.open(self.name)
         return self
 
 def dict_to_lists(d : dict):
     """
     Flattens a dict into keys and values, in the same order
-    
+
     :param d: dict to flatten
     :return: list of keys, list of values
     """

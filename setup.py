@@ -4,6 +4,7 @@ requirements = [
     'numpy>=1.10.0',
     'scipy>=0.18.0',
     'xlrd>=1.1.0',
+    'backoff>=1.6.0',
 ]
 
 setup(name='bayesian_benchmarking',
