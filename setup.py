@@ -19,6 +19,7 @@ setup(name='bayesian_benchmarking',
       packages=find_packages(include=["bayesian_benchmarks",
                                       "bayesian_benchmarks.*"]),
       install_requires=requirements,
+      package_data={"":["bayesian_benchmarksrc"]},
       include_package_data=True,
       classifiers=[
           'License :: OSI Approved :: Apache Software License',
