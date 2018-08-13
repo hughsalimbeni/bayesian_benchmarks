@@ -153,7 +153,7 @@ class Energy(Dataset):
 
 @add_regression
 class Naval(Dataset):
-    N, D, name = 11934, 12, 'naval'
+    N, D, name = 11934, 14, 'naval'
     url = uci_base_url + '00316/UCI%20CBM%20Dataset.zip'
 
     @property
