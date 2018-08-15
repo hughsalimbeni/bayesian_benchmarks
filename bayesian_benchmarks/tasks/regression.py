@@ -22,11 +22,11 @@ def parse_args():  # pragma: no cover
     parser.add_argument("--database_path", default='', nargs='?', type=str)
     return parser.parse_args()
 
-def run(ARGS, is_test=False):
-    data = get_regression_data(ARGS.dataset, split=ARGS.split)
+def run(ARGS, data=None, model=None, is_test=False):
 
-    Model = get_regression_model(ARGS.model)
-    model = Model(is_test=is_test, seed=ARGS.seed)
+    data = data or get_regression_data(ARGS.dataset, split=ARGS.split)
+    model = model or get_regression_model(ARGS.model)(is_test=is_test, seed=ARGS.seed)
+
     model.fit(data.X_train, data.Y_train)
     m, v = model.predict(data.X_test)
 
