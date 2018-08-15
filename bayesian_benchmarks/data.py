@@ -401,22 +401,31 @@ for name, N, D, K in classification_datasets:
 
 @add_regression
 class NYTaxi(Dataset):
-    N, D, name = 1457985, 11, 'nytaxi'
+    N, D, name = 1452751, 11, 'nytaxi'
     def read_data(self):
         data = pandas.read_csv(self.datapath).values
-        float_cols = data[:, [5, 6, 7, 8, 10]]
+
 
         ind = np.ones(len(data)).astype(bool)
         ind[data[:, 5] < -74.1] = False
         ind[data[:, 5] > -73.7] = False
         ind[data[:, 6] < 40.6] = False
         ind[data[:, 6] > 40.9] = False
+        ind[data[:, 7] < -74.1] = False
+        ind[data[:, 7] > -73.7] = False
+        ind[data[:, 8] < 40.6] = False
+        ind[data[:, 8] > 40.9] = False
 
+
+        data = data[ind, :]
+
+        # pickup_times = data[:, ]
         # from datetime import datetime
 
         # d = datetime.utcfromtimestamp(0)
         # a = np.array(['2016-03-14 17:24:56', '2016-03-14 17:24:57'])
         #
+
         # dd = datetime.strptime(a, "%Y-%m-%d %H:%M:%S")
         # # dd = datetime.strptime('2016-03-14 17:24:57', "%Y-%m-%d %H:%M:%S")
         #
@@ -424,12 +433,18 @@ class NYTaxi(Dataset):
 
 
         # date_cols = data[:, [2, 3]]
+        X = data[:, 5:7].astype(float)
+        Y = data[:, 7:9].astype(float)
+        print(X.shape)
+        print(Y.shape)
+        return X, Y
 
-        data = float_cols[ind, :].astype(float)
+        # float_cols = data[:, [5, 6, 7, 8, 10]]
+        # data = float_cols.astype(float)
         # print(data.shape)
         # data_cols_float = pandas.to_datetime(date_cols.flatten())
 
-        return data[:, :-1], data[:, -1].reshape(-1, 1)
+        # return data[:, :-1], data[:, -1].reshape(-1, 1)
 
     @property
     def datapath(self):
