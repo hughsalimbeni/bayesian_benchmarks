@@ -53,6 +53,8 @@ def run(ARGS, data=None, model=None, is_test=False):
         with Database(ARGS.database_path) as db:
             db.write('regression', res)
 
+    return res
+
 
 if __name__ == '__main__':
     run(parse_args())
