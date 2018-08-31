@@ -16,6 +16,8 @@ import numpy as np
 import os
 import pandas
 import logging
+from datetime import datetime
+from scipy.io import loadmat
 
 from urllib.request import urlopen
 logging.getLogger().setLevel(logging.INFO)
@@ -142,13 +144,13 @@ class Energy(Dataset):
         return data[:, :-1], data[:, -1].reshape(-1, 1)
 
 
-# @add_regression
-# class Kin8mn(Dataset):
-#     N, D, name = 8192, 8, 'kin8nm'
-#     url = 'http://mldata.org/repository/data/download/csv/uci-20070111-kin8nm'
-#     def read_data(self):
-#         data = pandas.read_csv(self.datapath, header=None).values
-#         return data[:, :-1], data[:, -1].reshape(-1, 1)
+@add_regression
+class Kin8mn(Dataset):
+    N, D, name = 8192, 8, 'kin8nm'
+    url = 'http://mldata.org/repository/data/download/csv/uci-20070111-kin8nm'
+    def read_data(self):
+        data = pandas.read_csv(self.datapath, header=None).values
+        return data[:, :-1], data[:, -1].reshape(-1, 1)
 
 
 @add_regression
@@ -265,6 +267,391 @@ class Classification(Dataset):
             data = np.concatenate([data1, data2], 0)
 
         return data[:, :-1], data[:, -1].reshape(-1, 1)
+
+
+rescale = lambda x, a, b: b[0] + (b[1] - b[0]) * x / (a[1] - a[0])
+
+
+def convert_to_day_minute(d):
+    day_of_week = rescale(float(d.weekday()), [0, 6], [0, 2 * np.pi])
+    time_of_day = rescale(d.time().hour * 60 + d.time().minute, [0, 24 * 60], [0, 2 * np.pi])
+    return day_of_week, time_of_day
+
+
+def process_time(pickup_datetime, dropoff_datetime):
+    d_pickup = datetime.strptime(pickup_datetime, "%Y-%m-%d %H:%M:%S")
+    d_dropoff = datetime.strptime(dropoff_datetime, "%Y-%m-%d %H:%M:%S")
+    duration = (d_dropoff - d_pickup).total_seconds()
+
+    pickup_day_of_week, pickup_time_of_day = convert_to_day_minute(d_pickup)
+    dropoff_day_of_week, dropoff_time_of_day = convert_to_day_minute(d_dropoff)
+
+    return [pickup_day_of_week, pickup_time_of_day,
+            dropoff_day_of_week, dropoff_time_of_day,
+            duration]
+
+
+class NYTaxiBase(Dataset):
+    x_bounds = [-74.04, -73.75]
+    y_bounds = [40.62, 40.86]
+    too_close_radius = 0.00001
+    min_duration = 30
+    max_duration = 3 * 3600
+    name = 'nytaxi'
+
+    def _read_data(self):
+        data = pandas.read_csv(self.datapath)#, nrows=10000)
+        data = data.values
+
+        # print(data.dtypes.index)
+        # 'id',  0
+        # 'vendor_id',  1
+        # 'pickup_datetime', 2
+        # 'dropoff_datetime',3
+        # 'passenger_count', 4
+        # 'pickup_longitude', 5
+        # 'pickup_latitude',6
+        # 'dropoff_longitude', 7
+        # 'dropoff_latitude', 8
+        # 'store_and_fwd_flag',9
+        # 'trip_duration'10
+
+        pickup_loc = np.array((data[:, 5], data[:, 6])).T
+        dropoff_loc = np.array((data[:, 7], data[:, 8])).T
+
+        ind = np.ones(len(data)).astype(bool)
+        ind[data[:, 5] < self.x_bounds[0]] = False
+        ind[data[:, 5] > self.x_bounds[1]] = False
+        ind[data[:, 6] < self.y_bounds[0]] = False
+        ind[data[:, 6] > self.y_bounds[1]] = False
+
+        ind[data[:, 7] < self.x_bounds[0]] = False
+        ind[data[:, 7] > self.x_bounds[1]] = False
+        ind[data[:, 8] < self.y_bounds[0]] = False
+        ind[data[:, 8] > self.y_bounds[1]] = False
+
+        print('discarding {} out of bounds {} {}'.format(np.sum(np.invert(ind).astype(int)), self.x_bounds,
+                                                         self.y_bounds))
+
+        early_stop = ((data[:, 5] - data[:, 7]) ** 2 + (data[:, 6] - data[:, 8]) ** 2 < self.too_close_radius)
+        ind[early_stop] = False
+        print('discarding {} trip less than {} gp dist'.format(np.sum(early_stop.astype(int)),
+                                                               self.too_close_radius ** 0.5))
+
+        times = np.array([process_time(d_pickup, d_dropoff) for (d_pickup, d_dropoff) in data[:, 2:4]])
+        pickup_time = times[:, :2]
+        dropoff_time = times[:, 2:4]
+        duration = times[:, 4]
+
+        short_journeys = (duration < self.min_duration)
+        ind[short_journeys] = False
+        print('discarding {} less than {}s journeys'.format(np.sum(short_journeys.astype(int)), self.min_duration))
+
+        long_journeys = (duration > self.max_duration)
+        ind[long_journeys] = False
+        print(
+            'discarding {} more than {}h journeys'.format(np.sum(long_journeys.astype(int)), self.max_duration / 3600.))
+
+        pickup_loc = pickup_loc[ind, :]
+        dropoff_loc = dropoff_loc[ind, :]
+        pickup_time = pickup_time[ind, :]
+        dropoff_time = dropoff_time[ind, :]
+        duration = duration[ind]
+
+        print('{} total rejected journeys'.format(np.sum(np.invert(ind).astype(int))))
+        return pickup_loc, dropoff_loc, pickup_time, dropoff_time, duration
+
+    @property
+    def datapath(self):
+        filename = 'train.csv'
+        return os.path.join(self.datadir, filename)
+
+    def download(self):
+        raise NotImplementedError
+
+
+@add_regression
+class NYTaxiTimePrediction(NYTaxiBase):
+    N, D = 1420068, 8
+    # N, D = 9741, 6
+
+    def read_data(self):
+        path = os.path.join(DATA_PATH, 'taxitime_preprocessed.npz')
+        if os.path.isfile(path):
+            with open(path, 'rb') as file:
+                f = np.load(file)
+                X, Y = f['X'], f['Y']
+
+        else:
+            pickup_loc, dropoff_loc, pickup_datetime, dropoff_datetime, duration = self._read_data()
+
+            pickup_sc = np.array([np.sin(pickup_datetime[:, 0]),
+                                  np.cos(pickup_datetime[:, 0]),
+                                  np.sin(pickup_datetime[:, 1]),
+                                  np.cos(pickup_datetime[:, 1])]).T
+
+            X = np.concatenate([pickup_loc, dropoff_loc, pickup_sc], 1)
+            Y = duration.reshape(-1, 1)
+            X, Y = np.array(X).astype(float), np.array(Y).astype(float)
+            with open(path, 'wb') as file:
+                np.savez(file, X=X, Y=Y)
+
+        return X, Y
+
+
+class NYTaxiLocationPrediction(NYTaxiBase):
+    def read_data(self):
+        pickup_loc, dropoff_loc, pickup_datetime, dropoff_datetime, duration = self._read_data()
+
+        pickup_sc = np.array([np.sin(pickup_datetime[:, 0]),
+                              np.cos(pickup_datetime[:, 0]),
+                              np.sin(pickup_datetime[:, 1]),
+                              np.cos(pickup_datetime[:, 1])]).T
+        #         X = np.concatenate([pickup_loc, pickup_sc, duration.reshape(-1, 1)], 1)
+        X = np.concatenate([pickup_loc, pickup_sc], 1)
+        Y = dropoff_loc
+        self.N, self.Dx = X.shape
+        self.Dy = Y.shape[1]
+        return np.array(X).astype(float), np.array(Y).astype(float)
+
+    def preprocess_data(self, X, Y):
+        return X, Y
+
+# Andrew Wilson's datasets
+#https://drive.google.com/open?id=0BxWe_IuTnMFcYXhxdUNwRHBKTlU
+class WilsonDataset(Dataset):
+    def __init__(self, name, N, D, data_path='/vol/bitbucket/hrs13/data/'):
+        self.data_path = data_path
+        self.name, self.N, self.D = name, N, D
+        self.type = 'regression'
+
+    def csv_file_path(self, name):
+        n = name[len('wilson_'):]
+        return '{}/uci/{}/{}.mat'.format(self.data_path, n, n)
+
+    def download_data(self):
+        print('download https://drive.google.com/open?id=0BxWe_IuTnMFcYXhxdUNwRHBKTlU')
+        raise NotImplementedError
+
+    def read_data(self):
+        data = loadmat(self.csv_file_path(self.name))['data']
+        self.N = data.shape[0]
+        return {'X':data[:, :-1], 'Y':data[:, -1, None]}
+
+@add_regression
+class Wilson_3droad(WilsonDataset):
+    def __init__(self):
+        WilsonDataset.__init__(self, 'wilson_3droad', 434874, 3)
+
+
+@add_regression
+class Wilson_challenger(WilsonDataset):
+    def __init__(self):
+        WilsonDataset.__init__(self, 'wilson_challenger', 23, 4)
+
+
+@add_regression
+class Wilson_gas(WilsonDataset):
+    def __init__(self):
+        WilsonDataset.__init__(self, 'wilson_gas', 2565, 128)
+
+
+@add_regression
+class Wilson_servo(WilsonDataset):
+    def __init__(self):
+        WilsonDataset.__init__(self, 'wilson_servo', 167, 4)
+
+
+@add_regression
+class Wilson_tamielectric(WilsonDataset):
+    def __init__(self):
+        WilsonDataset.__init__(self, 'wilson_tamielectric', 45781, 3)
+
+
+@add_regression
+class Wilson_airfoil(WilsonDataset):
+    def __init__(self):
+        WilsonDataset.__init__(self, 'wilson_airfoil', 1503, 5)
+
+
+@add_regression
+class Wilson_concrete(WilsonDataset):
+    def __init__(self):
+        WilsonDataset.__init__(self, 'wilson_concrete', 1030, 8)
+
+
+@add_regression
+class Wilson_machine(WilsonDataset):
+    def __init__(self):
+        WilsonDataset.__init__(self, 'wilson_machine', 209, 7)
+
+
+@add_regression
+class Wilson_skillcraft(WilsonDataset):
+    def __init__(self):
+        WilsonDataset.__init__(self, 'wilson_skillcraft', 3338, 19)
+
+
+@add_regression
+class Wilson_wine(WilsonDataset):
+    def __init__(self):
+        WilsonDataset.__init__(self, 'wilson_wine', 1599, 11)
+
+
+@add_regression
+class Wilson_autompg(WilsonDataset):
+    def __init__(self):
+        WilsonDataset.__init__(self, 'wilson_autompg', 392, 7)
+
+
+@add_regression
+class Wilson_concreteslump(WilsonDataset):
+    def __init__(self):
+        WilsonDataset.__init__(self, 'wilson_concreteslump', 103, 7)
+
+
+@add_regression
+class Wilson_houseelectric(WilsonDataset):
+    def __init__(self):
+        WilsonDataset.__init__(self, 'wilson_houseelectric', 2049280, 11)
+
+
+@add_regression
+class Wilson_parkinsons(WilsonDataset):
+    def __init__(self):
+        WilsonDataset.__init__(self, 'wilson_parkinsons', 5875, 20)
+
+
+@add_regression
+class Wilson_slice(WilsonDataset):
+    def __init__(self):
+        WilsonDataset.__init__(self, 'wilson_slice', 53500, 385)
+
+
+@add_regression
+class Wilson_yacht(WilsonDataset):
+    def __init__(self):
+        WilsonDataset.__init__(self, 'wilson_yacht', 308, 6)
+
+
+@add_regression
+class Wilson_autos(WilsonDataset):
+    def __init__(self):
+        WilsonDataset.__init__(self, 'wilson_autos', 159, 25)
+
+
+@add_regression
+class Wilson_elevators(WilsonDataset):
+    def __init__(self):
+        WilsonDataset.__init__(self, 'wilson_elevators', 16599, 18)
+
+
+@add_regression
+class Wilson_housing(WilsonDataset):
+    def __init__(self):
+        WilsonDataset.__init__(self, 'wilson_housing', 506, 13)
+
+
+@add_regression
+class Wilson_pendulum(WilsonDataset):
+    def __init__(self):
+        WilsonDataset.__init__(self, 'wilson_pendulum', 630, 9)
+
+
+@add_regression
+class Wilson_sml(WilsonDataset):
+    def __init__(self):
+        WilsonDataset.__init__(self, 'wilson_sml', 4137, 26)
+
+
+@add_regression
+class Wilson_bike(WilsonDataset):
+    def __init__(self):
+        WilsonDataset.__init__(self, 'wilson_bike', 17379, 17)
+
+
+@add_regression
+class Wilson_energy(WilsonDataset):
+    def __init__(self):
+        WilsonDataset.__init__(self, 'wilson_energy', 768, 8)
+
+
+@add_regression
+class Wilson_keggdirected(WilsonDataset):
+    def __init__(self):
+        WilsonDataset.__init__(self, 'wilson_keggdirected', 48827, 20)
+
+
+@add_regression
+class Wilson_pol(WilsonDataset):
+    def __init__(self):
+        WilsonDataset.__init__(self, 'wilson_pol', 15000, 26)
+
+
+@add_regression
+class Wilson_solar(WilsonDataset):
+    def __init__(self):
+        WilsonDataset.__init__(self, 'wilson_solar', 1066, 10)
+
+
+@add_regression
+class Wilson_breastcancer(WilsonDataset):
+    def __init__(self):
+        WilsonDataset.__init__(self, 'wilson_breastcancer', 194, 33)
+
+
+@add_regression
+class Wilson_fertility(WilsonDataset):
+    def __init__(self):
+        WilsonDataset.__init__(self, 'wilson_fertility', 100, 9)
+
+
+@add_regression
+class Wilson_keggundirected(WilsonDataset):
+    def __init__(self):
+        WilsonDataset.__init__(self, 'wilson_keggundirected', 63608, 27)
+
+
+@add_regression
+class Wilson_protein(WilsonDataset):
+    def __init__(self):
+        WilsonDataset.__init__(self, 'wilson_protein', 45730, 9)
+
+
+@add_regression
+class Wilson_song(WilsonDataset):
+    def __init__(self):
+        WilsonDataset.__init__(self, 'wilson_song', 515345, 90)
+
+
+@add_regression
+class Wilson_buzz(WilsonDataset):
+    def __init__(self):
+        WilsonDataset.__init__(self, 'wilson_buzz', 583250, 77)
+
+
+@add_regression
+class Wilson_forest(WilsonDataset):
+    def __init__(self):
+        WilsonDataset.__init__(self, 'wilson_forest', 517, 12)
+
+
+@add_regression
+class Wilson_kin40k(WilsonDataset):
+    def __init__(self):
+        WilsonDataset.__init__(self, 'wilson_kin40k', 40000, 8)
+
+
+@add_regression
+class Wilson_pumadyn32nm(WilsonDataset):
+    def __init__(self):
+        WilsonDataset.__init__(self, 'wilson_pumadyn32nm', 8192, 32)
+
+
+@add_regression
+class Wilson_stock(WilsonDataset):
+    def __init__(self):
+        WilsonDataset.__init__(self, 'wilson_stock', 536, 11)
 
 
 classification_datasets = [
@@ -396,54 +783,6 @@ for name, N, D, K in classification_datasets:
     @add_classficiation
     class C(Classification):
         name, N, D, K = name, N, D, K
-
-
-
-# @add_regression
-class NYTaxi(Dataset):
-    N, D, name = 1457985, 11, 'nytaxi'
-    def read_data(self):
-        data = pandas.read_csv(self.datapath).values
-        float_cols = data[:, [5, 6, 7, 8, 10]]
-
-        ind = np.ones(len(data)).astype(bool)
-        ind[data[:, 5] < -74.1] = False
-        ind[data[:, 5] > -73.7] = False
-        ind[data[:, 6] < 40.6] = False
-        ind[data[:, 6] > 40.9] = False
-
-        # from datetime import datetime
-
-        # d = datetime.utcfromtimestamp(0)
-        # a = np.array(['2016-03-14 17:24:56', '2016-03-14 17:24:57'])
-        #
-        # dd = datetime.strptime(a, "%Y-%m-%d %H:%M:%S")
-        # # dd = datetime.strptime('2016-03-14 17:24:57', "%Y-%m-%d %H:%M:%S")
-        #
-        # print(dd.timestamp())
-
-
-        # date_cols = data[:, [2, 3]]
-
-        data = float_cols[ind, :].astype(float)
-        # print(data.shape)
-        # data_cols_float = pandas.to_datetime(date_cols.flatten())
-
-        return data[:, :-1], data[:, -1].reshape(-1, 1)
-
-    @property
-    def datapath(self):
-        filename = 'train.csv'
-        return os.path.join(self.datadir, filename)
-
-
-    def download(self):
-        raise NotImplementedError
-
-    def preprocess_data(self, X, Y):
-        X, self.X_mean, self.X_std = normalize(X)
-        Y, self.Y_mean, self.Y_std = normalize(Y)
-        return X, Y
 
 
 

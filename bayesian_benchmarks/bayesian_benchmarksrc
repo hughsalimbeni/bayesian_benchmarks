@@ -1,7 +1,6 @@
 [paths]
 data_path = /data
 results_path = ./results/results.db
-a = /Users/hughsalimbeni/Documents/phd/git/DNSGP/experiments/new_regression/results.db
 
 [seeds]
 seed = 0
