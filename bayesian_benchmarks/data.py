@@ -420,22 +420,20 @@ class NYTaxiLocationPrediction(NYTaxiBase):
 # Andrew Wilson's datasets
 #https://drive.google.com/open?id=0BxWe_IuTnMFcYXhxdUNwRHBKTlU
 class WilsonDataset(Dataset):
-    def csv_file_path(self, name):
-        n = name[len('wilson_'):]
-        return '{}/uci/{}/{}.mat'.format(self.data_path, n, n)
-
-    def download_data(self):
-        print('download https://drive.google.com/open?id=0BxWe_IuTnMFcYXhxdUNwRHBKTlU')
-        raise NotImplementedError
+    @property
+    def datapath(self):
+        n = self.name[len('wilson_'):]
+        return '{}/uci/{}/{}.mat'.format(DATA_PATH, n, n)
 
     def read_data(self):
-        data = loadmat(self.csv_file_path(self.name))['data']
-        self.N = data.shape[0]
+        data = loadmat(self.datapath)['data']
         return {'X':data[:, :-1], 'Y':data[:, -1, None]}
+
 
 @add_regression
 class Wilson_3droad(WilsonDataset):
     name, N, D =  'wilson_3droad', 434874, 3
+
 
 @add_regression
 class Wilson_challenger(WilsonDataset):
