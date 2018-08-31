@@ -420,10 +420,6 @@ class NYTaxiLocationPrediction(NYTaxiBase):
 # Andrew Wilson's datasets
 #https://drive.google.com/open?id=0BxWe_IuTnMFcYXhxdUNwRHBKTlU
 class WilsonDataset(Dataset):
-    def __init__(self, data_path='/vol/bitbucket/hrs13/data/'):
-        self.data_path = data_path
-        self.type = 'regression'
-
     def csv_file_path(self, name):
         n = name[len('wilson_'):]
         return '{}/uci/{}/{}.mat'.format(self.data_path, n, n)
