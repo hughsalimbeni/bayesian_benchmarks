@@ -488,7 +488,7 @@ class Wilson_wine(WilsonDataset):
 
 @add_regression
 class Wilson_autompg(WilsonDataset):
-    name, N, D =  'wilson_autompg', 392, 7)
+    name, N, D =  'wilson_autompg', 392, 7
 
 
 @add_regression
