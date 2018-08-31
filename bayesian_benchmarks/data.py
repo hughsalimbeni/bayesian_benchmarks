@@ -207,7 +207,7 @@ class WineRed(Dataset):
 
 @add_regression
 class WineWhite(WineRed):
-    N, D, name = 4898, 12, 'winewhite'
+    N, D, name = 4898, 11, 'winewhite'
     url = uci_base_url + 'wine-quality/winequality-white.csv'
 
 
@@ -399,7 +399,7 @@ for name, N, D, K in classification_datasets:
 
 
 
-@add_regression
+# @add_regression
 class NYTaxi(Dataset):
     N, D, name = 1457985, 11, 'nytaxi'
     def read_data(self):
