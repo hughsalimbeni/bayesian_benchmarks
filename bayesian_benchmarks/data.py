@@ -420,9 +420,8 @@ class NYTaxiLocationPrediction(NYTaxiBase):
 # Andrew Wilson's datasets
 #https://drive.google.com/open?id=0BxWe_IuTnMFcYXhxdUNwRHBKTlU
 class WilsonDataset(Dataset):
-    def __init__(self, name, N, D, data_path='/vol/bitbucket/hrs13/data/'):
+    def __init__(self, data_path='/vol/bitbucket/hrs13/data/'):
         self.data_path = data_path
-        self.name, self.N, self.D = name, N, D
         self.type = 'regression'
 
     def csv_file_path(self, name):
@@ -440,218 +439,181 @@ class WilsonDataset(Dataset):
 
 @add_regression
 class Wilson_3droad(WilsonDataset):
-    def __init__(self):
-        WilsonDataset.__init__(self, 'wilson_3droad', 434874, 3)
-
+    name, N, D =  'wilson_3droad', 434874, 3
 
 @add_regression
 class Wilson_challenger(WilsonDataset):
-    def __init__(self):
-        WilsonDataset.__init__(self, 'wilson_challenger', 23, 4)
+    name, N, D = 'wilson_challenger', 23, 4
 
 
 @add_regression
 class Wilson_gas(WilsonDataset):
-    def __init__(self):
-        WilsonDataset.__init__(self, 'wilson_gas', 2565, 128)
+    name, N, D = 'wilson_gas', 2565, 128
 
 
 @add_regression
 class Wilson_servo(WilsonDataset):
-    def __init__(self):
-        WilsonDataset.__init__(self, 'wilson_servo', 167, 4)
+    name, N, D = 'wilson_servo', 167, 4
 
 
 @add_regression
 class Wilson_tamielectric(WilsonDataset):
-    def __init__(self):
-        WilsonDataset.__init__(self, 'wilson_tamielectric', 45781, 3)
+    name, N, D = 'wilson_tamielectric', 45781, 3
 
 
 @add_regression
 class Wilson_airfoil(WilsonDataset):
-    def __init__(self):
-        WilsonDataset.__init__(self, 'wilson_airfoil', 1503, 5)
+    name, N, D = 'wilson_airfoil', 1503, 5
 
 
 @add_regression
 class Wilson_concrete(WilsonDataset):
-    def __init__(self):
-        WilsonDataset.__init__(self, 'wilson_concrete', 1030, 8)
+    name, N, D = 'wilson_concrete', 1030, 8
 
 
 @add_regression
 class Wilson_machine(WilsonDataset):
-    def __init__(self):
-        WilsonDataset.__init__(self, 'wilson_machine', 209, 7)
+    name, N, D = 'wilson_machine', 209, 7
 
 
 @add_regression
 class Wilson_skillcraft(WilsonDataset):
-    def __init__(self):
-        WilsonDataset.__init__(self, 'wilson_skillcraft', 3338, 19)
+    name, N, D =  'wilson_skillcraft', 3338, 19
 
 
 @add_regression
 class Wilson_wine(WilsonDataset):
-    def __init__(self):
-        WilsonDataset.__init__(self, 'wilson_wine', 1599, 11)
+    name, N, D =  'wilson_wine', 1599, 11
 
 
 @add_regression
 class Wilson_autompg(WilsonDataset):
-    def __init__(self):
-        WilsonDataset.__init__(self, 'wilson_autompg', 392, 7)
+    name, N, D =  'wilson_autompg', 392, 7)
 
 
 @add_regression
 class Wilson_concreteslump(WilsonDataset):
-    def __init__(self):
-        WilsonDataset.__init__(self, 'wilson_concreteslump', 103, 7)
+    name, N, D = 'wilson_concreteslump', 103, 7
 
 
 @add_regression
 class Wilson_houseelectric(WilsonDataset):
-    def __init__(self):
-        WilsonDataset.__init__(self, 'wilson_houseelectric', 2049280, 11)
+    name, N, D = 'wilson_houseelectric', 2049280, 11
 
 
 @add_regression
 class Wilson_parkinsons(WilsonDataset):
-    def __init__(self):
-        WilsonDataset.__init__(self, 'wilson_parkinsons', 5875, 20)
+    name, N, D = 'wilson_parkinsons', 5875, 20
 
 
 @add_regression
 class Wilson_slice(WilsonDataset):
-    def __init__(self):
-        WilsonDataset.__init__(self, 'wilson_slice', 53500, 385)
+    name, N, D = 'wilson_slice', 53500, 385
 
 
 @add_regression
 class Wilson_yacht(WilsonDataset):
-    def __init__(self):
-        WilsonDataset.__init__(self, 'wilson_yacht', 308, 6)
+    name, N, D = 'wilson_yacht', 308, 6
 
 
 @add_regression
 class Wilson_autos(WilsonDataset):
-    def __init__(self):
-        WilsonDataset.__init__(self, 'wilson_autos', 159, 25)
+    name, N, D = 'wilson_autos', 159, 25
 
 
 @add_regression
 class Wilson_elevators(WilsonDataset):
-    def __init__(self):
-        WilsonDataset.__init__(self, 'wilson_elevators', 16599, 18)
+    name, N, D = 'wilson_elevators', 16599, 18
 
 
 @add_regression
 class Wilson_housing(WilsonDataset):
-    def __init__(self):
-        WilsonDataset.__init__(self, 'wilson_housing', 506, 13)
+    name, N, D = 'wilson_housing', 506, 13
 
 
 @add_regression
 class Wilson_pendulum(WilsonDataset):
-    def __init__(self):
-        WilsonDataset.__init__(self, 'wilson_pendulum', 630, 9)
+    name, N, D =  'wilson_pendulum', 630, 9
 
 
 @add_regression
 class Wilson_sml(WilsonDataset):
-    def __init__(self):
-        WilsonDataset.__init__(self, 'wilson_sml', 4137, 26)
+    name, N, D =  'wilson_sml', 4137, 26
 
 
 @add_regression
 class Wilson_bike(WilsonDataset):
-    def __init__(self):
-        WilsonDataset.__init__(self, 'wilson_bike', 17379, 17)
+    name, N, D = 'wilson_bike', 17379, 17
 
 
 @add_regression
 class Wilson_energy(WilsonDataset):
-    def __init__(self):
-        WilsonDataset.__init__(self, 'wilson_energy', 768, 8)
+    name, N, D = 'wilson_energy', 768, 8
 
 
 @add_regression
 class Wilson_keggdirected(WilsonDataset):
-    def __init__(self):
-        WilsonDataset.__init__(self, 'wilson_keggdirected', 48827, 20)
+    name, N, D = 'wilson_keggdirected', 48827, 20
 
 
 @add_regression
 class Wilson_pol(WilsonDataset):
-    def __init__(self):
-        WilsonDataset.__init__(self, 'wilson_pol', 15000, 26)
+    name, N, D = 'wilson_pol', 15000, 26
 
 
 @add_regression
 class Wilson_solar(WilsonDataset):
-    def __init__(self):
-        WilsonDataset.__init__(self, 'wilson_solar', 1066, 10)
+    name, N, D = 'wilson_solar', 1066, 10
 
 
 @add_regression
 class Wilson_breastcancer(WilsonDataset):
-    def __init__(self):
-        WilsonDataset.__init__(self, 'wilson_breastcancer', 194, 33)
+    name, N, D = 'wilson_breastcancer', 194, 33
 
 
 @add_regression
 class Wilson_fertility(WilsonDataset):
-    def __init__(self):
-        WilsonDataset.__init__(self, 'wilson_fertility', 100, 9)
+    name, N, D = 'wilson_fertility', 100, 9
 
 
 @add_regression
 class Wilson_keggundirected(WilsonDataset):
-    def __init__(self):
-        WilsonDataset.__init__(self, 'wilson_keggundirected', 63608, 27)
+    name, N, D = 'wilson_keggundirected', 63608, 27
 
 
 @add_regression
 class Wilson_protein(WilsonDataset):
-    def __init__(self):
-        WilsonDataset.__init__(self, 'wilson_protein', 45730, 9)
+    name, N, D = 'wilson_protein', 45730, 9
 
 
 @add_regression
 class Wilson_song(WilsonDataset):
-    def __init__(self):
-        WilsonDataset.__init__(self, 'wilson_song', 515345, 90)
+    name, N, D = 'wilson_song', 515345, 90
 
 
 @add_regression
 class Wilson_buzz(WilsonDataset):
-    def __init__(self):
-        WilsonDataset.__init__(self, 'wilson_buzz', 583250, 77)
+    name, N, D = 'wilson_buzz', 583250, 77
 
 
 @add_regression
 class Wilson_forest(WilsonDataset):
-    def __init__(self):
-        WilsonDataset.__init__(self, 'wilson_forest', 517, 12)
+    name, N, D = 'wilson_forest', 517, 12
 
 
 @add_regression
 class Wilson_kin40k(WilsonDataset):
-    def __init__(self):
-        WilsonDataset.__init__(self, 'wilson_kin40k', 40000, 8)
+    name, N, D = 'wilson_kin40k', 40000, 8
 
 
 @add_regression
 class Wilson_pumadyn32nm(WilsonDataset):
-    def __init__(self):
-        WilsonDataset.__init__(self, 'wilson_pumadyn32nm', 8192, 32)
+    name, N, D = 'wilson_pumadyn32nm', 8192, 32
 
 
 @add_regression
 class Wilson_stock(WilsonDataset):
-    def __init__(self):
-        WilsonDataset.__init__(self, 'wilson_stock', 536, 11)
+    name, N, D = 'wilson_stock', 536, 11
 
 
 classification_datasets = [
