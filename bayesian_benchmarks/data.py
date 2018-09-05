@@ -400,19 +400,31 @@ class NYTaxiTimePrediction(NYTaxiBase):
 
 
 class NYTaxiLocationPrediction(NYTaxiBase):
+    N, D = 1420068, 6
     def read_data(self):
-        pickup_loc, dropoff_loc, pickup_datetime, dropoff_datetime, duration = self._read_data()
+        path = os.path.join(DATA_PATH, 'taxiloc_preprocessed.npz')
+        if os.path.isfile(path):
+            with open(path, 'rb') as file:
+                f = np.load(file)
+                X, Y = f['X'], f['Y']
 
-        pickup_sc = np.array([np.sin(pickup_datetime[:, 0]),
-                              np.cos(pickup_datetime[:, 0]),
-                              np.sin(pickup_datetime[:, 1]),
-                              np.cos(pickup_datetime[:, 1])]).T
-        #         X = np.concatenate([pickup_loc, pickup_sc, duration.reshape(-1, 1)], 1)
-        X = np.concatenate([pickup_loc, pickup_sc], 1)
-        Y = dropoff_loc
-        self.N, self.Dx = X.shape
-        self.Dy = Y.shape[1]
-        return np.array(X).astype(float), np.array(Y).astype(float)
+        else:
+
+            pickup_loc, dropoff_loc, pickup_datetime, dropoff_datetime, duration = self._read_data()
+
+            pickup_sc = np.array([np.sin(pickup_datetime[:, 0]),
+                                  np.cos(pickup_datetime[:, 0]),
+                                  np.sin(pickup_datetime[:, 1]),
+                                  np.cos(pickup_datetime[:, 1])]).T
+            #         X = np.concatenate([pickup_loc, pickup_sc, duration.reshape(-1, 1)], 1)
+            X = np.concatenate([pickup_loc, pickup_sc], 1)
+            Y = dropoff_loc
+            X, Y = np.array(X).astype(float), np.array(Y).astype(float)
+
+            with open(path, 'wb') as file:
+                np.savez(file, X=X, Y=Y)
+
+        return X, Y
 
     def preprocess_data(self, X, Y):
         return X, Y
@@ -427,7 +439,7 @@ class WilsonDataset(Dataset):
 
     def read_data(self):
         data = loadmat(self.datapath)['data']
-        return {'X':data[:, :-1], 'Y':data[:, -1, None]}
+        return data[:, :-1], data[:, -1, None]
 
 
 @add_regression
