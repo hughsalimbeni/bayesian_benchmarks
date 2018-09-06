@@ -37,12 +37,10 @@ def mmd(A, B, kernel):
 
     return np.sum(KAA)/m/m - 2*np.sum(KAB)/m/n + np.sum(KBB)/n/n
 
-def run(ARGS, is_test=False):
-    data = get_regression_data(ARGS.dataset, split=ARGS.split)
+def run(ARGS, data=None, model=None, is_test=False):
+    data = data or get_regression_data(ARGS.dataset, split=ARGS.split)
+    model = model or get_regression_model(ARGS.model)(is_test=is_test, seed=ARGS.seed)
 
-    Model = get_regression_model(ARGS.model)
-
-    model = Model(is_test=is_test, seed=ARGS.seed)
     model.fit(data.X_train, data.Y_train)
 
     res = {}

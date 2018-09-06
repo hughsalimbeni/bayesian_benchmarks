@@ -19,7 +19,7 @@ import numpy as np
 
 from bayesian_benchmarks.data import regression_datasets, get_regression_data, get_classification_data
 
-@pytest.mark.parametrize('d', regression_datasets)
+@pytest.mark.parametrize('d', ['boston'])
 def test_regression(d):
     data = get_regression_data(d)
 

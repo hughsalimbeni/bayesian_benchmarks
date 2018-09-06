@@ -62,9 +62,9 @@ def make_condor_jobs(script: str, experiments: list, overwrite=False):
     """
     Writes a condor submission file, and also creates the executable if necessary. Preamble for the 
     exectable (e.g. for setting up the python environment) should go in 'preamble.txt.txt'. Preamble
-    for the condor submission should go in condor_preamble.txt.txt.
+    for the condor submission should go in condor_preamble.txt.txt.txt.
 
-    If overwrite=True then a new file is written with the condor preamble from condor_preamble.txt,
+    If overwrite=True then a new file is written with the condor preamble from condor_preamble.txt.txt,
     otherwise lines are appended. 
 
     :param script: name of python script to run
@@ -93,7 +93,7 @@ def make_condor_jobs(script: str, experiments: list, overwrite=False):
 
     if overwrite:
         with open('condor_jobs', 'w') as f:
-            with open('condor_preamble.txt', 'r') as ff:
+            with open('condor_preamble.txt.txt', 'r') as ff:
                 f.writelines(ff)
 
     with open('condor_jobs', 'a') as f:
