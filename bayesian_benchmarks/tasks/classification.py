@@ -27,16 +27,15 @@ def parse_args():  # pragma: no cover
     parser.add_argument("--database_path", default='', nargs='?', type=str)
     return parser.parse_args()
 
-def run(ARGS, is_test=False):
-    data = get_classification_data(ARGS.dataset, split=ARGS.split)
+def run(ARGS, model=None, data=None, is_test=False):
+    data = data or get_classification_data(ARGS.dataset, split=ARGS.split)
+    model = model or get_classification_model(ARGS.model)(data.K, is_test=is_test, seed=ARGS.seed)
 
     def onehot(Y, K):
         return np.eye(K)[Y.flatten().astype(int)].reshape(Y.shape[:-1]+(K,))
 
     Y_oh = onehot(data.Y_test, data.K)[None, :, :]  # 1, N_test, K
 
-    Model = get_classification_model(ARGS.model)
-    model = Model(data.K, is_test=is_test, seed=ARGS.seed)
     model.fit(data.X_train, data.Y_train)
     p = model.predict(data.X_test)  # N_test, K
 
@@ -64,6 +63,8 @@ def run(ARGS, is_test=False):
     if not is_test:  # pragma: no cover
         with Database(ARGS.database_path) as db:
             db.write('classification', res)
+
+    return res
 
 
 if __name__ == '__main__':
