@@ -472,9 +472,9 @@ class Wilson_airfoil(WilsonDataset):
     name, N, D = 'wilson_airfoil', 1503, 5
 
 
-@add_regression
-class Wilson_concrete(WilsonDataset):
-    name, N, D = 'wilson_concrete', 1030, 8
+# @add_regression
+# class Wilson_concrete(WilsonDataset):
+#     name, N, D = 'wilson_concrete', 1030, 8
 
 
 @add_regression
@@ -487,9 +487,9 @@ class Wilson_skillcraft(WilsonDataset):
     name, N, D =  'wilson_skillcraft', 3338, 19
 
 
-@add_regression
-class Wilson_wine(WilsonDataset):
-    name, N, D =  'wilson_wine', 1599, 11
+# @add_regression
+# class Wilson_wine(WilsonDataset):
+#     name, N, D =  'wilson_wine', 1599, 11
 
 
 @add_regression
@@ -517,9 +517,9 @@ class Wilson_slice(WilsonDataset):
     name, N, D = 'wilson_slice', 53500, 385
 
 
-@add_regression
-class Wilson_yacht(WilsonDataset):
-    name, N, D = 'wilson_yacht', 308, 6
+# @add_regression
+# class Wilson_yacht(WilsonDataset):
+#     name, N, D = 'wilson_yacht', 308, 6
 
 
 @add_regression
@@ -552,9 +552,9 @@ class Wilson_bike(WilsonDataset):
     name, N, D = 'wilson_bike', 17379, 17
 
 
-@add_regression
-class Wilson_energy(WilsonDataset):
-    name, N, D = 'wilson_energy', 768, 8
+# @add_regression
+# class Wilson_energy(WilsonDataset):
+#     name, N, D = 'wilson_energy', 768, 8
 
 
 @add_regression
@@ -587,9 +587,9 @@ class Wilson_keggundirected(WilsonDataset):
     name, N, D = 'wilson_keggundirected', 63608, 27
 
 
-@add_regression
-class Wilson_protein(WilsonDataset):
-    name, N, D = 'wilson_protein', 45730, 9
+# @add_regression
+# class Wilson_protein(WilsonDataset):
+#     name, N, D = 'wilson_protein', 45730, 9
 
 
 @add_regression
@@ -612,9 +612,9 @@ class Wilson_kin40k(WilsonDataset):
     name, N, D = 'wilson_kin40k', 40000, 8
 
 
-@add_regression
-class Wilson_pumadyn32nm(WilsonDataset):
-    name, N, D = 'wilson_pumadyn32nm', 8192, 32
+# @add_regression
+# class Wilson_pumadyn32nm(WilsonDataset):
+#     name, N, D = 'wilson_pumadyn32nm', 8192, 32
 
 
 @add_regression
