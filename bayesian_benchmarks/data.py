@@ -291,7 +291,7 @@ def process_time(pickup_datetime, dropoff_datetime):
             duration]
 
 
-class NYTaxiBase(Dataset):
+class NYTaxiBase(Dataset):  #https://www.kaggle.com/c/nyc-taxi-trip-duration/data
     x_bounds = [-74.04, -73.75]
     y_bounds = [40.62, 40.86]
     too_close_radius = 0.00001
@@ -300,7 +300,10 @@ class NYTaxiBase(Dataset):
     name = 'nytaxi'
 
     def _read_data(self):
-        data = pandas.read_csv(self.datapath)#, nrows=10000)
+        try:
+            data = pandas.read_csv(self.datapath)#, nrows=10000)
+        except:
+            raise FileNotFoundError('download from https://www.kaggle.com/c/nyc-taxi-trip-duration/data')
         data = data.values
 
         # print(data.dtypes.index)
@@ -532,9 +535,9 @@ class Wilson_elevators(WilsonDataset):
     name, N, D = 'wilson_elevators', 16599, 18
 
 
-@add_regression
-class Wilson_housing(WilsonDataset):
-    name, N, D = 'wilson_housing', 506, 13
+# @add_regression
+# class Wilson_housing(WilsonDataset):
+#     name, N, D = 'wilson_housing', 506, 13
 
 
 @add_regression
