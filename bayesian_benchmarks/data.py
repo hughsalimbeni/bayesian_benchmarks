@@ -299,7 +299,7 @@ class NYTaxiBase(Dataset):
     max_duration = 3 * 3600
     name = 'nytaxi'
 
-    def _read_data(self):
+    def read_data(self):
         data = pandas.read_csv(self.datapath)#, nrows=10000)
         data = data.values
 
@@ -383,7 +383,7 @@ class NYTaxiTimePrediction(NYTaxiBase):
                 X, Y = f['X'], f['Y']
 
         else:
-            pickup_loc, dropoff_loc, pickup_datetime, dropoff_datetime, duration = self._read_data()
+            pickup_loc, dropoff_loc, pickup_datetime, dropoff_datetime, duration = super().read_data()
 
             pickup_sc = np.array([np.sin(pickup_datetime[:, 0]),
                                   np.cos(pickup_datetime[:, 0]),
@@ -400,9 +400,24 @@ class NYTaxiTimePrediction(NYTaxiBase):
 
 
 class NYTaxiLocationPrediction(NYTaxiBase):
+    """
+    Dataset of NY city yellow cab trajectories.
+    Goal is to predict the location of the drop-off given information
+    of the pick-up location.
+    Features are (in correct order):
+    - pick-up longitude (x-axis)
+    - pick-up latitude (y-axis)
+    - sin of pick-up's day of week
+    - cos of pick-up's day of week
+    - sin of pick-up's time of day
+    - cos of pick-up's time of day
+    Target:
+    - drop-off longitude (x-axis)
+    - drop-off longitude (y-axis)
+    """
     N, D = 1420068, 6
     def read_data(self):
-        path = os.path.join(DATA_PATH, 'taxiloc_preprocessed.npz')
+        path = os.path.join(self.datadir, 'taxiloc_preprocessed.npz')
         if os.path.isfile(path):
             with open(path, 'rb') as file:
                 f = np.load(file)
@@ -410,7 +425,7 @@ class NYTaxiLocationPrediction(NYTaxiBase):
 
         else:
 
-            pickup_loc, dropoff_loc, pickup_datetime, dropoff_datetime, duration = self._read_data()
+            pickup_loc, dropoff_loc, pickup_datetime, dropoff_datetime, duration = super().read_data()
 
             pickup_sc = np.array([np.sin(pickup_datetime[:, 0]),
                                   np.cos(pickup_datetime[:, 0]),
@@ -428,6 +443,57 @@ class NYTaxiLocationPrediction(NYTaxiBase):
 
     def preprocess_data(self, X, Y):
         return X, Y
+
+from shapely.geometry import Point
+from shapely.geometry.polygon import Polygon
+
+class ManhattenTaxiLocationPrediction(NYTaxiLocationPrediction):
+    manhatten = np.array([
+                    (-74.01486074610608, 40.69789456740636),
+                    (-73.98945486231702, 40.70674394137351),
+                    (-73.97640859766858, 40.70934647466638),
+                    (-73.96816885157483, 40.73848789840274),
+                    (-73.93795644923108, 40.77593669289899),
+                    (-73.92971670313733, 40.79205398220305),
+                    (-73.89675771876233, 40.80245015761007),
+                    (-73.93177663966077, 40.81544308727557),
+                    (-73.95374929591077, 40.82531601230209),
+                    (-73.99838125391858, 40.77125674729456),
+                    (-74.01280080958264, 40.74525104688661),
+                    (-74.02104055567643, 40.70049744650249)
+                        ]).reshape(-1, 2)  # Lon, Lat
+    manhatten_polygon = Polygon(manhatten) # create polygon
+    N, D = 1197417, 6
+
+    def read_data(self):
+
+        path = os.path.join(self.datadir, 'manhatten_taxiloc_preprocessed.npz')
+        if os.path.isfile(path):
+            with open(path, 'rb') as file:
+                f = np.load(file)
+                X, Y = f['X'], f['Y']
+        else:
+            X, Y = super().read_data()
+            def point_inside_manhatten(lon_lat):
+                return Point(lon_lat[0], lon_lat[1]).within(self.manhatten_polygon)
+
+            def trip_inside_manhatten(lon_lat_pickup, lon_lat_dropoff):
+                return point_inside_manhatten(lon_lat_pickup) and point_inside_manhatten(lon_lat_dropoff)
+
+            trip_inside_manhatten_indices = np.array([trip_inside_manhatten(x[:2], y) for x, y in zip(X, Y)])
+            X = X[trip_inside_manhatten_indices, :]
+            Y = Y[trip_inside_manhatten_indices, :]
+
+            with open(path, 'wb') as file:
+                np.savez(file, X=X, Y=Y)
+
+        return X, Y
+
+    # def preprocess_data(self, X, Y):
+    #     X, self.X_mean, self.X_std = normalize(X)
+    #     Y, self.Y_mean, self.Y_std = normalize(Y)
+    #     return X, Y
+
 
 # Andrew Wilson's datasets
 #https://drive.google.com/open?id=0BxWe_IuTnMFcYXhxdUNwRHBKTlU
