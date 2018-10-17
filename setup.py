@@ -5,6 +5,7 @@ requirements = [
     'scipy>=0.18.0',
     'xlrd>=1.1.0',
     'pandas>=0.23',
+    'shapely',
 ]
 
 setup(name='bayesian_benchmarking',
