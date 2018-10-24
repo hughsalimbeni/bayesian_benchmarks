@@ -43,25 +43,52 @@ def normalize(X):
 
 
 class Dataset(object):
-    def __init__(self, split=0, prop=0.9):
+    def __init__(self, split=0, prop=0.9, test_split_method='random'):
         if self.needs_download:
             self.download()
 
         X_raw, Y_raw = self.read_data()
         X, Y = self.preprocess_data(X_raw, Y_raw)
 
-        ind = np.arange(self.N)
-
-        np.random.seed(BASE_SEED + split)
-        np.random.shuffle(ind)
-
         n = int(self.N * prop)
+        np.random.seed(BASE_SEED + split)
 
-        self.X_train = X[ind[:n]]
-        self.Y_train = Y[ind[:n]]
+        if test_split_method == 'random':
+            ind = np.arange(self.N)
 
-        self.X_test = X[ind[n:]]
-        self.Y_test = Y[ind[n:]]
+            np.random.shuffle(ind)
+
+            self.X_train = X[ind[:n]]
+            self.Y_train = Y[ind[:n]]
+
+            self.X_test = X[ind[n:]]
+            self.Y_test = Y[ind[n:]]
+
+        elif test_split_method == 'furthest_greedy':
+            ind_test = np.zeros(self.N).astype(bool)
+
+            def dist(i):
+                return np.sum((X - X[i]) ** 2, 1)
+
+            i = np.random.choice(self.N, 1)
+
+            Ds = np.empty((n, self.N))
+
+            Ds[0, :] = dist(i)
+
+            for it in range(1, self.N - n):
+                i = np.argmax(np.min(Ds[:it, :], axis=0), axis=0)
+                Ds[it, :] = dist(i)
+                ind_test[i] = True
+
+            self.X_train = X[np.invert(ind_test)]
+            self.Y_train = Y[np.invert(ind_test)]
+
+            self.X_test = X[ind_test]
+            self.Y_test = Y[ind_test]
+
+        else:
+            raise NotImplementedError
 
     @property
     def datadir(self):
@@ -112,6 +139,8 @@ class Dataset(object):
 
 
 uci_base_url = 'https://archive.ics.uci.edu/ml/machine-learning-databases/'
+
+
 
 
 @add_regression
