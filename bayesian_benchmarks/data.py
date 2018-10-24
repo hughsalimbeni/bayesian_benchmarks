@@ -447,8 +447,8 @@ class NYTaxiLocationPrediction(NYTaxiBase):
 from shapely.geometry import Point
 from shapely.geometry.polygon import Polygon
 
-class ManhattenTaxiLocationPrediction(NYTaxiLocationPrediction):
-    manhatten = np.array([
+class ManhattanTaxiLocationPrediction(NYTaxiLocationPrediction):
+    manhattan = np.array([
                     (-74.01486074610608, 40.69789456740636),
                     (-73.98945486231702, 40.70674394137351),
                     (-73.97640859766858, 40.70934647466638),
@@ -462,27 +462,27 @@ class ManhattenTaxiLocationPrediction(NYTaxiLocationPrediction):
                     (-74.01280080958264, 40.74525104688661),
                     (-74.02104055567643, 40.70049744650249)
                         ]).reshape(-1, 2)  # Lon, Lat
-    manhatten_polygon = Polygon(manhatten) # create polygon
+    manhattan_polygon = Polygon(manhattan) # create polygon
     N, D = 1197417, 6
 
     def read_data(self):
 
-        path = os.path.join(self.datadir, 'manhatten_taxiloc_preprocessed.npz')
+        path = os.path.join(self.datadir, 'manhattan_taxiloc_preprocessed.npz')
         if os.path.isfile(path):
             with open(path, 'rb') as file:
                 f = np.load(file)
                 X, Y = f['X'], f['Y']
         else:
             X, Y = super().read_data()
-            def point_inside_manhatten(lon_lat):
-                return Point(lon_lat[0], lon_lat[1]).within(self.manhatten_polygon)
+            def point_inside_manhattan(lon_lat):
+                return Point(lon_lat[0], lon_lat[1]).within(self.manhattan_polygon)
 
-            def trip_inside_manhatten(lon_lat_pickup, lon_lat_dropoff):
-                return point_inside_manhatten(lon_lat_pickup) and point_inside_manhatten(lon_lat_dropoff)
+            def trip_inside_manhattan(lon_lat_pickup, lon_lat_dropoff):
+                return point_inside_manhattan(lon_lat_pickup) and point_inside_manhattan(lon_lat_dropoff)
 
-            trip_inside_manhatten_indices = np.array([trip_inside_manhatten(x[:2], y) for x, y in zip(X, Y)])
-            X = X[trip_inside_manhatten_indices, :]
-            Y = Y[trip_inside_manhatten_indices, :]
+            trip_inside_manhattan_indices = np.array([trip_inside_manhattan(x[:2], y) for x, y in zip(X, Y)])
+            X = X[trip_inside_manhattan_indices, :]
+            Y = Y[trip_inside_manhattan_indices, :]
 
             with open(path, 'wb') as file:
                 np.savez(file, X=X, Y=Y)
