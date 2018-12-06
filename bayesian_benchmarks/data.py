@@ -53,7 +53,7 @@ class Dataset(object):
         n = int(self.N * prop)
         np.random.seed(BASE_SEED + split)
 
-        if test_split_method == 'random':
+        if test_split_method == 'random' or test_split_method == "furthest_greedy":
             ind = np.arange(self.N)
 
             np.random.shuffle(ind)
@@ -64,31 +64,35 @@ class Dataset(object):
             self.X_test = X[ind[n:]]
             self.Y_test = Y[ind[n:]]
 
-        elif test_split_method == 'furthest_greedy':
-            ind_test = np.zeros(self.N).astype(bool)
+        if test_split_method == 'furthest_greedy':
+            print("FAR AWAY!")
+            X = self.X_test
+            Y = self.Y_test
+            N = len(X)
+
+            ind_test = np.zeros(N).astype(bool)
 
             def dist(i):
                 return np.sum((X - X[i]) ** 2, 1)
 
-            i = np.random.choice(self.N, 1)
+            i = np.random.choice(N, 1)
 
-            Ds = np.empty((n, self.N))
+            nt = int(N - N * 0.9)
+            print(nt, N)
+            Ds = np.empty((nt, N))
 
             Ds[0, :] = dist(i)
 
-            for it in range(1, self.N - n):
+            for it in range(1, nt):
                 i = np.argmax(np.min(Ds[:it, :], axis=0), axis=0)
                 Ds[it, :] = dist(i)
                 ind_test[i] = True
 
-            self.X_train = X[np.invert(ind_test)]
-            self.Y_train = Y[np.invert(ind_test)]
+            # self.X_train = X[np.invert(ind_test)]
+            # self.Y_train = Y[np.invert(ind_test)]
 
             self.X_test = X[ind_test]
             self.Y_test = Y[ind_test]
-
-        else:
-            raise NotImplementedError
 
     @property
     def datadir(self):
