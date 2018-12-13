@@ -19,14 +19,14 @@ class RegressionModel(object):
         else:  # pragma: no cover
             class ARGS:
                 grid_size = 100
-                iterations = 10000
+                iterations = 100
                 initial_likelihood_var = 0.01  # not being set yet
         self.ARGS = ARGS
         self.model = None
 
     def fit(self, X, Y):
-        X = torch.Tensor(X)
-        Y = torch.Tensor(Y[:, 0])
+        X = torch.Tensor(X).contiguous().cuda()
+        Y = torch.Tensor(Y[:, 0]).contiguous().cuda()
 
         # make model if necessary
         if not self.model:
@@ -34,19 +34,19 @@ class RegressionModel(object):
             class GPRegressionModel(gpytorch.models.ExactGP):
                 def __init__(self, train_x, train_y, likelihood):
                     super(GPRegressionModel, self).__init__(train_x, train_y, likelihood)
-                    self.mean_module = ConstantMean()
+                    self.mean_module = ConstantMean().cuda()
                     self.base_covar_module = ScaleKernel(RBFKernel())
                     self.covar_module = ProductStructureKernel(
                         GridInterpolationKernel(self.base_covar_module, grid_size=100, num_dims=1), num_dims=18
-                    )
+                    ).cuda()
 
                 def forward(self, x):
                     mean_x = self.mean_module(x)
                     covar_x = self.covar_module(x)
                     return MultivariateNormal(mean_x, covar_x)
 
-            self.likelihood = gpytorch.likelihoods.GaussianLikelihood()
-            self.model = GPRegressionModel(X, Y, self.likelihood)
+            self.likelihood = gpytorch.likelihoods.GaussianLikelihood().cuda()
+            self.model = GPRegressionModel(X, Y, self.likelihood).cuda()
 
             # Find optimal model hyperparameters
             self.model.train()
@@ -72,6 +72,8 @@ class RegressionModel(object):
                                                            loss.item()))
                     optimizer.step()
 
+                    torch.cuda.empty_cache()
+
             with gpytorch.settings.use_toeplitz(True):
                 train()
 
@@ -85,8 +87,8 @@ class RegressionModel(object):
         with gpytorch.settings.max_preconditioner_size(10), torch.no_grad():
             with gpytorch.settings.use_toeplitz(False), gpytorch.settings.max_root_decomposition_size(
                     30), gpytorch.fast_pred_var():
-                preds = self.likelihood(self.model(torch.Tensor(Xs)))
-                m = preds.mean.numpy().reshape(len(Xs), 1)
-                v = preds.variance.numpy().reshape(len(Xs), 1)
+                preds = self.likelihood(self.model(torch.Tensor(Xs).contiguous().cuda()))
+                m = preds.mean.cpu().numpy().reshape(len(Xs), 1)
+                v = preds.variance.cpu().numpy().reshape(len(Xs), 1)
         return m, v
 

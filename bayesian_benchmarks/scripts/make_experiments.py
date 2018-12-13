@@ -62,9 +62,9 @@ def make_condor_jobs(script: str, experiments: list, overwrite=False):
     """
     Writes a condor submission file, and also creates the executable if necessary. Preamble for the 
     exectable (e.g. for setting up the python environment) should go in 'preamble.txt.txt'. Preamble
-    for the condor submission should go in condor_preamble.txt.txt.txt.
+    for the condor submission should go in condor_preamble.txt.
 
-    If overwrite=True then a new file is written with the condor preamble from condor_preamble.txt.txt,
+    If overwrite=True then a new file is written with the condor preamble from condor_preamble.txt,
     otherwise lines are appended. 
 
     :param script: name of python script to run
@@ -93,7 +93,7 @@ def make_condor_jobs(script: str, experiments: list, overwrite=False):
 
     if overwrite:
         with open('condor_jobs', 'w') as f:
-            with open('condor_preamble.txt.txt', 'r') as ff:
+            with open('condor_preamble.txt', 'r') as ff:
                 f.writelines(ff)
 
     with open('condor_jobs', 'a') as f:
@@ -116,33 +116,40 @@ def remove_already_run_experiments(table, experiments):
     print(s.format(len(experiments), len(experiments) - len(res), len(res)))
     return res
 
+
 #################################################
 models = [
-          'linear',
-          'variationally_sparse_gp',
-          'variationally_sparse_gp_minibatch',
-          'deep_gp_doubly_stochastic',
-          'svm',
-          'knn',
-          'naive_bayes',
-          'decision_tree',
-          'random_forest',
-          'gradient_boosting_machine',
-          'adaboost',
-          'mlp',
+          # 'linear',
+          # 'full_gp_gpytorch',
+          # 'full_gp_gpflow',
+          # 'variationally_sparse_gp',
+          'grid_interpolation_gp',
+          # 'variationally_sparse_gp_minibatch',
+          # 'deep_gp_doubly_stochastic',
+          # 'svm',
+          # 'knn',
+          # 'naive_bayes',
+          # 'decision_tree',
+          # 'random_forest',
+          # 'gradient_boosting_machine',
+          # 'adaboost',
+          # 'mlp',
           ]
 
 
 ############# Regression
 combinations = []
 combinations.append({'dataset' : regression_datasets})
-combinations.append({'split' : range(10)})
+combinations.append({'split' : range(1)})
 combinations.append({'model' : models})
 experiments = make_experiment_combinations(combinations)
-experiments = remove_already_run_experiments('regression', experiments)
+# experiments = remove_already_run_experiments('regression', experiments)
 
 make_local_jobs('../tasks/regression', experiments, overwrite=True)
 make_condor_jobs('../tasks/regression', experiments, overwrite=True)
+
+
+
 
 # make_local_jobs('../tasks/active_learning_continuous', experiments)
 # make_condor_jobs('../tasks/active_learning_continuous', experiments)
@@ -151,16 +158,16 @@ make_condor_jobs('../tasks/regression', experiments, overwrite=True)
 # make_condor_jobs('../tasks/conditional_density_estimation', experiments)
 
 ############# Classification
-combinations = []
-combinations.append({'dataset' : classification_datasets})
-combinations.append({'split' : range(10)})
-combinations.append({'model' : models})
-
-experiments = make_experiment_combinations(combinations)
-experiments = remove_already_run_experiments('classification', experiments)
-
-make_local_jobs('../tasks/classification', experiments)
-make_condor_jobs('../tasks/classification', experiments)
+# combinations = []
+# combinations.append({'dataset' : classification_datasets})
+# combinations.append({'split' : range(10)})
+# combinations.append({'model' : models})
+#
+# experiments = make_experiment_combinations(combinations)
+# experiments = remove_already_run_experiments('classification', experiments)
+#
+# make_local_jobs('../tasks/classification', experiments)
+# make_condor_jobs('../tasks/classification', experiments)
 #
 # # make_local_jobs('../tasks/active_learning_discrete', experiments)
 # # make_condor_jobs('../tasks/active_learning_discrete', experiments)

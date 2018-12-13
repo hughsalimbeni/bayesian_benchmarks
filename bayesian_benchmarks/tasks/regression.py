@@ -8,6 +8,7 @@ Metrics reported are test log likelihood, mean squared error, and absolute error
 import argparse
 import numpy as np
 from scipy.stats import norm
+import time
 
 from bayesian_benchmarks.data import get_regression_data
 from bayesian_benchmarks.database_utils import Database
@@ -27,8 +28,17 @@ def run(ARGS, data=None, model=None, is_test=False):
     data = data or get_regression_data(ARGS.dataset, split=ARGS.split)
     model = model or get_regression_model(ARGS.model)(is_test=is_test, seed=ARGS.seed)
 
+    t = time.time()
     model.fit(data.X_train, data.Y_train)
     m, v = model.predict(data.X_test)
+    s = 'Dataset: {:20s} Model: {:30s} N:{:8s} D:{:8s} Time: {:.4f}s'.format(data.name,
+                                                                            ARGS.model,
+                                                                            str(data.N),
+                                                                            str(data.D),
+                                                                            time.time() - t)
+    print(s)
+    with open('res.txt', 'a') as f:
+        f.write(s + '\n')
 
     res = {}
 
@@ -48,10 +58,10 @@ def run(ARGS, data=None, model=None, is_test=False):
     res['test_rmse_unnormalized'] = np.average(du**2)**0.5
 
     res.update(ARGS.__dict__)
-
-    if not is_test:  # pragma: no cover
-        with Database(ARGS.database_path) as db:
-            db.write('regression', res)
+    print('{:.4f} {:.4f}'.format(res['test_loglik'], res['test_rmse']))
+    # if not is_test:  # pragma: no cover
+    #     with Database(ARGS.database_path) as db:
+    #         db.write('regression', res)
 
     return res
 

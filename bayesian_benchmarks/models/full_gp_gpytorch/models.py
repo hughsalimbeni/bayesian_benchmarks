@@ -14,7 +14,7 @@ class RegressionModel(object):
                 small_iterations = 1
         else:  # pragma: no cover
             class ARGS:
-                iterations = 10000
+                iterations = 1000
                 initial_likelihood_var = 0.01  # not being set yet
         self.ARGS = ARGS
         self.model = None
