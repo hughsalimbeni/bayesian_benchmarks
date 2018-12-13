@@ -65,8 +65,8 @@ class ClassificationModel(object):
                 initial_likelihood_var = 0.01
         else:  # pragma: no cover
             class ARGS:
-                num_inducing = 100
-                iterations = 5000
+                num_inducing = 500
+                iterations = 10000
                 small_iterations = 1000
                 initial_likelihood_var = 0.01
 
@@ -93,7 +93,7 @@ class ClassificationModel(object):
                                             minibatch_size=None)
 
             self.sess = self.model.enquire_session()
-            self.opt = gpflow.train.ScipyOptimizer()
+            self.opt = gpflow.train.ScipyOptimizer(maxiter=self.ARGS.iterations)
 
             iters = self.ARGS.iterations
 
