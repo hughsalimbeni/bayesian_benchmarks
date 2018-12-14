@@ -19,7 +19,7 @@ class RegressionModel(object):
         else:  # pragma: no cover
             class ARGS:
                 grid_size = 100
-                iterations = 100
+                iterations = 20
                 initial_likelihood_var = 0.01  # not being set yet
         self.ARGS = ARGS
         self.model = None
@@ -35,10 +35,13 @@ class RegressionModel(object):
                 def __init__(self, train_x, train_y, likelihood):
                     super(GPRegressionModel, self).__init__(train_x, train_y, likelihood)
                     self.mean_module = ConstantMean().cuda()
-                    self.base_covar_module = ScaleKernel(RBFKernel())
+                    self.base_rbf_module = RBFKernel()
+                    self.base_covar_module = ScaleKernel(self.base_rbf_module)
+                    # Example initializing lengthscale. ln(2)=0.69314 is the default value
+                    # self.base_rbf_module.initialize(lengthscale=0.69314)
                     self.covar_module = ProductStructureKernel(
-                        GridInterpolationKernel(self.base_covar_module, grid_size=100, num_dims=1), num_dims=18
-                    ).cuda()
+                        GridInterpolationKernel(self.base_covar_module, grid_size=100, num_dims=1), num_dims=train_x.size(-1)
+                    )
 
                 def forward(self, x):
                     mean_x = self.mean_module(x)
@@ -55,7 +58,7 @@ class RegressionModel(object):
             # Use the adam optimizer
             optimizer = torch.optim.Adam([
                 {'params': self.model.parameters()},  # Includes GaussianLikelihood parameters
-            ], lr=0.01)
+            ], lr=0.1)
 
             # "Loss" for GPs - the marginal log likelihood
             mll = gpytorch.mlls.ExactMarginalLogLikelihood(self.likelihood, self.model)
@@ -66,7 +69,7 @@ class RegressionModel(object):
                     output = self.model(X)
                     loss = -mll(output, Y)
                     loss.backward()
-                    if i % 100 == 0:
+                    if i % 1 == 0:
                         print('Iter %d/%d - Loss: %.3f' % (i + 1,
                                                            self.ARGS.iterations,
                                                            loss.item()))
@@ -74,7 +77,7 @@ class RegressionModel(object):
 
                     torch.cuda.empty_cache()
 
-            with gpytorch.settings.use_toeplitz(True):
+            with gpytorch.settings.use_toeplitz(False), gpytorch.settings.max_root_decomposition_size(30):
                 train()
 
 
