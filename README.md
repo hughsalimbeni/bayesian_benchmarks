@@ -27,6 +27,7 @@ Current implementations:
 * 2 layer Deep Gaussian process, with [doubly-stochastic variational inference](http://papers.nips.cc/paper/7045-doubly-stochastic-variational-inference-for-deep-gaussian-processes.pdf)
 * A variety of sklearn models
 
+See the models folder for instruction for adding new models. 
 
 Coming soon:
 * [Structured Variational Learning of Bayesian Neural Networks with Horseshoe Priors](https://arxiv.org/pdf/1806.05975.pdf)
