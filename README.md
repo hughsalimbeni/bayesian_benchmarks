@@ -25,7 +25,8 @@ Current implementations:
 * Sparse variational GP, for [Gaussian](http://proceedings.mlr.press/v5/titsias09a/titsias09a.pdf) and [non-Gaussian](http://proceedings.mlr.press/v38/hensman15.pdf) likelihoods
 * Sparse variational GP, with [minibatches](https://arxiv.org/pdf/1309.6835.pdf)
 * 2 layer Deep Gaussian process, with [doubly-stochastic variational inference](http://papers.nips.cc/paper/7045-doubly-stochastic-variational-inference-for-deep-gaussian-processes.pdf)
-A variety of sklearn models
+* A variety of sklearn models
+
 
 Coming soon:
 * [Structured Variational Learning of Bayesian Neural Networks with Horseshoe Priors](https://arxiv.org/pdf/1806.05975.pdf)
