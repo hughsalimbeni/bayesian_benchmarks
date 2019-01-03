@@ -15,6 +15,7 @@ def get_classification_model(name):
     return non_bayesian_model(name, 'classification') or \
            import_module('bayesian_benchmarks.models.{}.models'.format(name)).ClassificationModel
 
+# add new regression models here 
 all_regression_models = [
       'linear',
       'variationally_sparse_gp',
@@ -28,6 +29,7 @@ all_regression_models = [
       'mlp',
       ]
 
+# add new classification models here
 all_classification_models = [
     'linear',
     'variationally_sparse_gp',
