@@ -53,7 +53,6 @@ class Database:
         keys, vals = dict_to_lists(delete_dict)
         t = ' AND '.join(['{}=?'.format(k) for k in keys])
         s = "DELETE FROM {} WHERE ({})".format(table, t)
-        # doesn't appear to be working
         self.cursor.execute(s, vals)
 
     def read(self, table_name : str, fields_to_return : list, search_dict : dict, limit=None):
