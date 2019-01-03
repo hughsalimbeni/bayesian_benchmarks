@@ -45,7 +45,7 @@ def read(datasets, models, splits, table, field):
     if hasattr(_ALL_DATASETS[datasets[0]], 'K'):
         res.insert(2, 'K', [_ALL_DATASETS[dataset].K for dataset in datasets])
 
-    pandas.DataFrame.to_csv(res, 'results_{}_{}.csv'.format(table, field), float_format='%.4f')
+    pandas.DataFrame.to_csv(res, 'results_{}_{}.csv'.format(table, field), float_format='%.6f')
 
 splits = range(1)
 
