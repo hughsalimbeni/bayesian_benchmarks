@@ -19,6 +19,7 @@ def get_classification_model(name):
 all_regression_models = [
       'linear',
       'variationally_sparse_gp',
+      'neural_kernel_network',
       # 'deep_gp_doubly_stochastic',
       'svm',
       'knn',
@@ -33,6 +34,7 @@ all_regression_models = [
 all_classification_models = [
     'linear',
     'variationally_sparse_gp',
+    'neural_kernel_network',
     # 'deep_gp_doubly_stochastic',
     'svm',
     'naive_bayes',

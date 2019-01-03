@@ -57,6 +57,10 @@ class RegressionModel(object):
         self.ARGS = ARGS
         self.model = None
 
+    def _make_kernel(self, X):
+        lengthscale = self.ARGS.lengthscale * float(X.shape[1]) ** 0.5
+        return gpflow.kernels.RBF(X.shape[1], lengthscales=lengthscale)
+
     def fit(self, X, Y):
         N, D = X.shape
 
@@ -71,8 +75,7 @@ class RegressionModel(object):
         if not self.model:
 
             # kernel
-            lengthscale = self.ARGS.lengthscale * float(X.shape[1]) ** 0.5
-            kern = gpflow.kernels.RBF(D, lengthscales=lengthscale)
+            kern = self._make_kernel(X)
 
             """
             There are three models we can use:
@@ -148,6 +151,10 @@ class ClassificationModel(object):
         self.K = K
         self.model = None
 
+    def _make_kernel(self, X):
+        lengthscale = self.ARGS.lengthscale * float(X.shape[1]) ** 0.5
+        return gpflow.kernels.RBF(X.shape[1], lengthscales=lengthscale)
+
     def fit(self, X, Y):
         N, D = X.shape
 
@@ -178,8 +185,7 @@ class ClassificationModel(object):
                 num_latent = self.K
 
             # kernel
-            lengthscale = self.ARGS.lengthscale * float(X.shape[1]) ** 0.5
-            kern = gpflow.kernels.RBF(D, lengthscales=lengthscale)
+            kern =self._make_kernel(X)
 
             if not is_sparse:
                 self.model = gpflow.models.VGP(X, Y, kern, lik, num_latent=num_latent)

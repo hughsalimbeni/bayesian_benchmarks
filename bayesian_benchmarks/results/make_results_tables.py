@@ -22,6 +22,15 @@ def sort_data_by_N(datasets):
 regression_datasets = sort_data_by_N(regression_datasets)
 classification_datasets = sort_data_by_N(classification_datasets)
 
+# with Database() as db:
+#     print(db.read('regression', ['test_loglik'], {'model': 'neural_kernel_network',
+#                              'dataset': 'wilson_airfoil',
+#                                     'split' : 0}))
+    # db.delete('regression',  {'model': 'neural_kernel_network',
+    #                          'dataset': 'wilson_airfoil',
+    #                                 'split' : 0})
+
+
 def read(datasets, models, splits, table, field):
     results = []
     with Database() as db:
@@ -33,7 +42,11 @@ def read(datasets, models, splits, table, field):
                                                    'split' : split})
 
                     if len(res) > 0:
-                        results.append(float(res[0][0]))
+                        try:
+                            results.append(float(res[0][0]))
+                        except:
+                            print(res, model, dataset)
+                            results.append(-1)
 
                     else:
                         results.append(-1)

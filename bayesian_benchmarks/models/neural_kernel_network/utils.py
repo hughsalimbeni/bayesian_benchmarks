@@ -7,9 +7,9 @@ def median_distance_local(x):
     :param x: shape of [n, d]
     :return: float
     """
-    if x.shape[0] > 10000:
+    if x.shape[0] > 5000:
         permutation = np.random.permutation(x.shape[0])
-        x = x[permutation[:10000]]
+        x = x[permutation[:5000]]
     x_col = np.expand_dims(x, 1)
     x_row = np.expand_dims(x, 0)
     dis_a = np.abs(x_col - x_row) # [n, n, d]
