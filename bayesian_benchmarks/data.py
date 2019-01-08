@@ -291,7 +291,7 @@ def process_time(pickup_datetime, dropoff_datetime):
             duration]
 
 
-class NYTaxiBase(Dataset):
+class NYTaxiBase(Dataset):  #https://www.kaggle.com/c/nyc-taxi-trip-duration/data
     x_bounds = [-74.04, -73.75]
     y_bounds = [40.62, 40.86]
     too_close_radius = 0.00001
@@ -300,7 +300,10 @@ class NYTaxiBase(Dataset):
     name = 'nytaxi'
 
     def _read_data(self):
-        data = pandas.read_csv(self.datapath)#, nrows=10000)
+        try:
+            data = pandas.read_csv(self.datapath)#, nrows=10000)
+        except:
+            raise FileNotFoundError('download from https://www.kaggle.com/c/nyc-taxi-trip-duration/data')
         data = data.values
 
         # print(data.dtypes.index)
@@ -472,9 +475,9 @@ class Wilson_airfoil(WilsonDataset):
     name, N, D = 'wilson_airfoil', 1503, 5
 
 
-@add_regression
-class Wilson_concrete(WilsonDataset):
-    name, N, D = 'wilson_concrete', 1030, 8
+# @add_regression
+# class Wilson_concrete(WilsonDataset):
+#     name, N, D = 'wilson_concrete', 1030, 8
 
 
 @add_regression
@@ -487,9 +490,9 @@ class Wilson_skillcraft(WilsonDataset):
     name, N, D =  'wilson_skillcraft', 3338, 19
 
 
-@add_regression
-class Wilson_wine(WilsonDataset):
-    name, N, D =  'wilson_wine', 1599, 11
+# @add_regression
+# class Wilson_wine(WilsonDataset):
+#     name, N, D =  'wilson_wine', 1599, 11
 
 
 @add_regression
@@ -517,9 +520,9 @@ class Wilson_slice(WilsonDataset):
     name, N, D = 'wilson_slice', 53500, 385
 
 
-@add_regression
-class Wilson_yacht(WilsonDataset):
-    name, N, D = 'wilson_yacht', 308, 6
+# @add_regression
+# class Wilson_yacht(WilsonDataset):
+#     name, N, D = 'wilson_yacht', 308, 6
 
 
 @add_regression
@@ -532,9 +535,9 @@ class Wilson_elevators(WilsonDataset):
     name, N, D = 'wilson_elevators', 16599, 18
 
 
-@add_regression
-class Wilson_housing(WilsonDataset):
-    name, N, D = 'wilson_housing', 506, 13
+# @add_regression
+# class Wilson_housing(WilsonDataset):
+#     name, N, D = 'wilson_housing', 506, 13
 
 
 @add_regression
@@ -552,9 +555,9 @@ class Wilson_bike(WilsonDataset):
     name, N, D = 'wilson_bike', 17379, 17
 
 
-@add_regression
-class Wilson_energy(WilsonDataset):
-    name, N, D = 'wilson_energy', 768, 8
+# @add_regression
+# class Wilson_energy(WilsonDataset):
+#     name, N, D = 'wilson_energy', 768, 8
 
 
 @add_regression
@@ -587,9 +590,9 @@ class Wilson_keggundirected(WilsonDataset):
     name, N, D = 'wilson_keggundirected', 63608, 27
 
 
-@add_regression
-class Wilson_protein(WilsonDataset):
-    name, N, D = 'wilson_protein', 45730, 9
+# @add_regression
+# class Wilson_protein(WilsonDataset):
+#     name, N, D = 'wilson_protein', 45730, 9
 
 
 @add_regression
@@ -612,9 +615,9 @@ class Wilson_kin40k(WilsonDataset):
     name, N, D = 'wilson_kin40k', 40000, 8
 
 
-@add_regression
-class Wilson_pumadyn32nm(WilsonDataset):
-    name, N, D = 'wilson_pumadyn32nm', 8192, 32
+# @add_regression
+# class Wilson_pumadyn32nm(WilsonDataset):
+#     name, N, D = 'wilson_pumadyn32nm', 8192, 32
 
 
 @add_regression
