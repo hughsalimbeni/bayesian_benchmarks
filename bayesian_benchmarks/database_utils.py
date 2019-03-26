@@ -42,6 +42,7 @@ class Database:
 
         except sqlite3.Error as e:  # pragma: no cover
             print("Error connecting to database!")
+            raise(e)
 
     def close(self):
         if self.conn:
