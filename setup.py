@@ -5,6 +5,7 @@ requirements = [
     'scipy>=0.18.0',
     'xlrd>=1.1.0',
     'pandas>=0.23',
+    'pytest>=4.4.0',
 ]
 
 setup(name='bayesian_benchmarks',
