@@ -7,7 +7,7 @@ requirements = [
     'pandas>=0.23',
 ]
 
-setup(name='bayesian_benchmarking',
+setup(name='bayesian_benchmarks',
       version='alpha',
       author="Hugh Salimbeni",
       author_email="hrs13@ic.ac.uk",
