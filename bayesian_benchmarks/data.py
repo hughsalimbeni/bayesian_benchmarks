@@ -785,7 +785,6 @@ class MujocoSoftActorCriticDataset(Dataset):
         if not os.path.isdir(source):
             raise Exception('There is no experiment for the environment ' + self.name)
         shutil.copytree(source, self.datadir)
-        print('Successful copy operation!')
 
     def read_data(self):
         """
