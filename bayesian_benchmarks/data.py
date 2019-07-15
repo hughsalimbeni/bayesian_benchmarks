@@ -19,6 +19,7 @@ import logging
 from datetime import datetime
 from scipy.io import loadmat
 import pickle
+import shutil
 
 from urllib.request import urlopen
 logging.getLogger().setLevel(logging.INFO)
@@ -766,6 +767,27 @@ class MujocoSoftActorCriticDataset(Dataset):
     the attributes `observation_dimension' and `action_dimension' respectively
     """
 
+    @property
+    def datadir(self):
+        dir = os.path.join(DATA_PATH, self.name)
+        if not os.path.isdir(dir):
+            os.mkdir(dir)
+        return dir
+
+    @property
+    def needs_download(self):
+        if len(os.listdir(self.datadir)) == 0:
+            return True
+        return False
+
+    def download(self):
+        if not os.path.isdir(path_to_mujoco_dataset):
+            raise Exception('Path to Mujoco dataset does not contain a directory')
+        source = os.path.join(path_to_mujoco_dataset, 'env=' + self.name)
+        if not os.path.isdir(source):
+            raise Exception('There is no experiment for the environment ' + self.name)
+        shutil.copytree(source, self.datadir)
+
     def read_data(self):
         """
         `X_raw' stores concatenated observation-action vectors
@@ -774,17 +796,11 @@ class MujocoSoftActorCriticDataset(Dataset):
         :return: X_raw [transitions x (observation_dimension + action_dimension)]
                  Y_raw [transitions x (observation_dimension + 1)]
         """
-        if not os.path.isdir(path_to_mujoco_dataset):
-            raise Exception('Path to Mujoco dataset does not contain a directory')
-
-        experiment_dir = os.path.join(path_to_mujoco_dataset, 'env=' + self.name)
-        if not os.path.isdir(experiment_dir):
-            raise Exception('There is no experiment for the environment ' + self.name)
 
         X_raw, Y_raw = None, None
         for policy_checkpoint in policy_checkpoints:
 
-            evaluation_dir = os.path.join(experiment_dir, 'environment_step=' + policy_checkpoint)
+            evaluation_dir = os.path.join(self.datadir, 'environment_step=' + policy_checkpoint)
             if not os.path.isdir(evaluation_dir):
                 raise Exception('There is no evaluation direcory for policy checkpoint ' + policy_checkpoint)
 
@@ -842,7 +858,6 @@ class MujocoSoftActorCriticDataset(Dataset):
 
 @add_regression
 class Ant(MujocoSoftActorCriticDataset):
-    needs_download = False
     name = 'Ant-v2'
     observation_dimension = 111
     action_dimension = 8
@@ -850,7 +865,6 @@ class Ant(MujocoSoftActorCriticDataset):
 
 @add_regression
 class HalfCheetah(MujocoSoftActorCriticDataset):
-    needs_download = False
     name = 'HalfCheetah-v2'
     observation_dimension = 17
     action_dimension = 6
@@ -858,7 +872,6 @@ class HalfCheetah(MujocoSoftActorCriticDataset):
 
 @add_regression
 class Hopper(MujocoSoftActorCriticDataset):
-    needs_download = False
     name = 'Hopper-v2'
     observation_dimension = 11
     action_dimension = 3
@@ -866,7 +879,6 @@ class Hopper(MujocoSoftActorCriticDataset):
 
 @add_regression
 class Humanoid(MujocoSoftActorCriticDataset):
-    needs_download = False
     name = 'Humanoid-v2'
     observation_dimension = 376
     action_dimension = 17
@@ -874,7 +886,6 @@ class Humanoid(MujocoSoftActorCriticDataset):
 
 @add_regression
 class InvertedDoublePendulum(MujocoSoftActorCriticDataset):
-    needs_download = False
     name = 'InvertedDoublePendulum-v2'
     observation_dimension = 11
     action_dimension = 1
@@ -882,7 +893,6 @@ class InvertedDoublePendulum(MujocoSoftActorCriticDataset):
 
 @add_regression
 class InvertedPendulum(MujocoSoftActorCriticDataset):
-    needs_download = False
     name = 'InvertedPendulum-v2'
     observation_dimension = 4
     action_dimension = 1
@@ -890,7 +900,6 @@ class InvertedPendulum(MujocoSoftActorCriticDataset):
 
 @add_regression
 class Pendulum(MujocoSoftActorCriticDataset):
-    needs_download = False
     name = 'Pendulum-v0'
     observation_dimension = 3
     action_dimension = 1
@@ -898,7 +907,6 @@ class Pendulum(MujocoSoftActorCriticDataset):
 
 @add_regression
 class Reacher(MujocoSoftActorCriticDataset):
-    needs_download = False
     name = 'Reacher-v2'
     observation_dimension = 11
     action_dimension = 2
@@ -906,7 +914,6 @@ class Reacher(MujocoSoftActorCriticDataset):
 
 @add_regression
 class Swimmer(MujocoSoftActorCriticDataset):
-    needs_download = False
     name = 'Swimmer-v2'
     observation_dimension = 8
     action_dimension = 2
@@ -914,7 +921,6 @@ class Swimmer(MujocoSoftActorCriticDataset):
 
 @add_regression
 class Walker2d(MujocoSoftActorCriticDataset):
-    needs_download = False
     name = 'Walker2d-v2'
     observation_dimension = 17
     action_dimension = 6
@@ -933,6 +939,3 @@ def get_regression_data(name, *args, **kwargs):
 
 def get_classification_data(name, *args, **kwargs):
     return _ALL_CLASSIFICATION_DATATSETS[name](*args, **kwargs)
-
-
-
