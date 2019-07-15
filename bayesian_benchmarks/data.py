@@ -842,6 +842,7 @@ class MujocoSoftActorCriticDataset(Dataset):
 
 @add_regression
 class Ant(MujocoSoftActorCriticDataset):
+    needs_download = False
     name = 'Ant-v2'
     observation_dimension = 111
     action_dimension = 8
@@ -849,6 +850,7 @@ class Ant(MujocoSoftActorCriticDataset):
 
 @add_regression
 class HalfCheetah(MujocoSoftActorCriticDataset):
+    needs_download = False
     name = 'HalfCheetah-v2'
     observation_dimension = 17
     action_dimension = 6
@@ -856,6 +858,7 @@ class HalfCheetah(MujocoSoftActorCriticDataset):
 
 @add_regression
 class Hopper(MujocoSoftActorCriticDataset):
+    needs_download = False
     name = 'Hopper-v2'
     observation_dimension = 11
     action_dimension = 3
@@ -863,6 +866,7 @@ class Hopper(MujocoSoftActorCriticDataset):
 
 @add_regression
 class Humanoid(MujocoSoftActorCriticDataset):
+    needs_download = False
     name = 'Humanoid-v2'
     observation_dimension = 376
     action_dimension = 17
@@ -870,6 +874,7 @@ class Humanoid(MujocoSoftActorCriticDataset):
 
 @add_regression
 class InvertedDoublePendulum(MujocoSoftActorCriticDataset):
+    needs_download = False
     name = 'InvertedDoublePendulum-v2'
     observation_dimension = 11
     action_dimension = 1
@@ -877,6 +882,7 @@ class InvertedDoublePendulum(MujocoSoftActorCriticDataset):
 
 @add_regression
 class InvertedPendulum(MujocoSoftActorCriticDataset):
+    needs_download = False
     name = 'InvertedPendulum-v2'
     observation_dimension = 4
     action_dimension = 1
@@ -884,6 +890,7 @@ class InvertedPendulum(MujocoSoftActorCriticDataset):
 
 @add_regression
 class Pendulum(MujocoSoftActorCriticDataset):
+    needs_download = False
     name = 'Pendulum-v0'
     observation_dimension = 3
     action_dimension = 1
@@ -891,6 +898,7 @@ class Pendulum(MujocoSoftActorCriticDataset):
 
 @add_regression
 class Reacher(MujocoSoftActorCriticDataset):
+    needs_download = False
     name = 'Reacher-v2'
     observation_dimension = 11
     action_dimension = 2
@@ -898,6 +906,7 @@ class Reacher(MujocoSoftActorCriticDataset):
 
 @add_regression
 class Swimmer(MujocoSoftActorCriticDataset):
+    needs_download = False
     name = 'Swimmer-v2'
     observation_dimension = 8
     action_dimension = 2
@@ -905,6 +914,7 @@ class Swimmer(MujocoSoftActorCriticDataset):
 
 @add_regression
 class Walker2d(MujocoSoftActorCriticDataset):
+    needs_download = False
     name = 'Walker2d-v2'
     observation_dimension = 17
     action_dimension = 6
