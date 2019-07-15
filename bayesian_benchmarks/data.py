@@ -770,13 +770,11 @@ class MujocoSoftActorCriticDataset(Dataset):
     @property
     def datadir(self):
         dir = os.path.join(DATA_PATH, self.name)
-        if not os.path.isdir(dir):
-            os.mkdir(dir)
         return dir
 
     @property
     def needs_download(self):
-        if len(os.listdir(self.datadir)) == 0:
+        if not os.path.isdir(self.datadir):
             return True
         return False
 
@@ -787,6 +785,7 @@ class MujocoSoftActorCriticDataset(Dataset):
         if not os.path.isdir(source):
             raise Exception('There is no experiment for the environment ' + self.name)
         shutil.copytree(source, self.datadir)
+        print('Successful copy operation!')
 
     def read_data(self):
         """
@@ -796,7 +795,6 @@ class MujocoSoftActorCriticDataset(Dataset):
         :return: X_raw [transitions x (observation_dimension + action_dimension)]
                  Y_raw [transitions x (observation_dimension + 1)]
         """
-
         X_raw, Y_raw = None, None
         for policy_checkpoint in policy_checkpoints:
 
