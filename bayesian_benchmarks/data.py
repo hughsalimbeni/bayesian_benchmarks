@@ -18,8 +18,6 @@ import pandas
 import logging
 from datetime import datetime
 from scipy.io import loadmat
-import pickle
-import shutil
 
 from urllib.request import urlopen
 logging.getLogger().setLevel(logging.INFO)
@@ -755,173 +753,6 @@ for name, N, D, K in classification_datasets:
         name, N, D, K = name, N, D, K
 
 
-path_to_mujoco_dataset = '/home/felix/Desktop/policy_destination'
-policy_checkpoints = [str(i * 100000) for i in range(11)]
-evaluation_suffix = 'sac_policy.eval'
-evaluations = 10
-
-
-class MujocoSoftActorCriticDataset(Dataset):
-    """
-    The dimensions of the observation space and the action space are given by
-    the attributes `observation_dimension' and `action_dimension' respectively
-    """
-
-    @property
-    def datadir(self):
-        dir = os.path.join(DATA_PATH, self.name)
-        return dir
-
-    @property
-    def needs_download(self):
-        if not os.path.isdir(self.datadir):
-            return True
-        return False
-
-    def download(self):
-        if not os.path.isdir(path_to_mujoco_dataset):
-            raise Exception('Path to Mujoco dataset does not contain a directory')
-        source = os.path.join(path_to_mujoco_dataset, 'env=' + self.name)
-        if not os.path.isdir(source):
-            raise Exception('There is no experiment for the environment ' + self.name)
-        shutil.copytree(source, self.datadir)
-
-    def read_data(self):
-        """
-        `X_raw' stores concatenated observation-action vectors
-        `Y_raw' stores the difference vectors between the next and the current observation vectors,
-                concatenated with the scalar reward signal
-        :return: X_raw [transitions x (observation_dimension + action_dimension)]
-                 Y_raw [transitions x (observation_dimension + 1)]
-        """
-        X_raw, Y_raw = None, None
-        for policy_checkpoint in policy_checkpoints:
-
-            evaluation_dir = os.path.join(self.datadir, 'environment_step=' + policy_checkpoint)
-            if not os.path.isdir(evaluation_dir):
-                raise Exception('There is no evaluation direcory for policy checkpoint ' + policy_checkpoint)
-
-            evaluation_file = os.path.join(evaluation_dir, evaluation_suffix)
-            if not os.path.isfile(evaluation_file):
-                raise Exception('There is no evaluation file for policy checkpoint ' + policy_checkpoint)
-
-            X_raw_checkpoint, Y_raw_checkpoint = self._read_checkpoint_data(evaluation_file)
-            if X_raw is None and Y_raw is None:
-                X_raw = X_raw_checkpoint
-                Y_raw = Y_raw_checkpoint
-            else:
-                X_raw = np.concatenate((X_raw, X_raw_checkpoint))
-                Y_raw = np.concatenate((Y_raw, Y_raw_checkpoint))
-
-        assert len(X_raw) == len(Y_raw)
-        assert X_raw.shape[1] == self.observation_dimension + self.action_dimension
-        assert Y_raw.shape[1] == self.observation_dimension + 1
-        self.N = len(X_raw)
-        return X_raw, Y_raw
-
-    def _read_checkpoint_data(self, evaluation_file):
-
-        with open(evaluation_file, 'rb') as handle:
-            evaluation_result = pickle.load(handle)
-            assert len(evaluation_result) == evaluations
-
-        X_raw_checkpoint, Y_raw_checkpoint = None, None
-        for evaluation in range(evaluations):
-
-            evaluation_result_trajec = evaluation_result[evaluation]
-            observation_trajec = evaluation_result_trajec['observations']
-            action_trajec = evaluation_result_trajec['actions']
-            reward_trajec = evaluation_result_trajec['rewards']
-            assert len(observation_trajec) == len(action_trajec) + 1 == len(reward_trajec) + 1
-            assert observation_trajec.shape[1] == self.observation_dimension
-            assert action_trajec.shape[1] == self.action_dimension
-            assert len(reward_trajec.shape) == 1
-
-            X_raw_trajec = np.concatenate((observation_trajec[:-1, :], action_trajec), axis=1)
-            delta_observation_trajec = observation_trajec[1:, :] - observation_trajec[:-1, :]
-            Y_raw_trajec = np.concatenate((delta_observation_trajec, reward_trajec[:, None]), axis=1)
-            if X_raw_checkpoint is None and Y_raw_checkpoint is None:
-                X_raw_checkpoint = X_raw_trajec
-                Y_raw_checkpoint = Y_raw_trajec
-            else:
-                X_raw_checkpoint = np.concatenate((X_raw_checkpoint, X_raw_trajec))
-                Y_raw_checkpoint = np.concatenate((Y_raw_checkpoint, Y_raw_trajec))
-
-        assert len(X_raw_checkpoint) == len(Y_raw_checkpoint)
-        assert X_raw_checkpoint.shape[1] == self.observation_dimension + self.action_dimension
-        assert Y_raw_checkpoint.shape[1] == self.observation_dimension + 1
-        return X_raw_checkpoint, Y_raw_checkpoint
-
-
-@add_regression
-class Ant(MujocoSoftActorCriticDataset):
-    name = 'Ant-v2'
-    observation_dimension = 111
-    action_dimension = 8
-
-
-@add_regression
-class HalfCheetah(MujocoSoftActorCriticDataset):
-    name = 'HalfCheetah-v2'
-    observation_dimension = 17
-    action_dimension = 6
-
-
-@add_regression
-class Hopper(MujocoSoftActorCriticDataset):
-    name = 'Hopper-v2'
-    observation_dimension = 11
-    action_dimension = 3
-
-
-@add_regression
-class Humanoid(MujocoSoftActorCriticDataset):
-    name = 'Humanoid-v2'
-    observation_dimension = 376
-    action_dimension = 17
-
-
-@add_regression
-class InvertedDoublePendulum(MujocoSoftActorCriticDataset):
-    name = 'InvertedDoublePendulum-v2'
-    observation_dimension = 11
-    action_dimension = 1
-
-
-@add_regression
-class InvertedPendulum(MujocoSoftActorCriticDataset):
-    name = 'InvertedPendulum-v2'
-    observation_dimension = 4
-    action_dimension = 1
-
-
-@add_regression
-class Pendulum(MujocoSoftActorCriticDataset):
-    name = 'Pendulum-v0'
-    observation_dimension = 3
-    action_dimension = 1
-
-
-@add_regression
-class Reacher(MujocoSoftActorCriticDataset):
-    name = 'Reacher-v2'
-    observation_dimension = 11
-    action_dimension = 2
-
-
-@add_regression
-class Swimmer(MujocoSoftActorCriticDataset):
-    name = 'Swimmer-v2'
-    observation_dimension = 8
-    action_dimension = 2
-
-
-@add_regression
-class Walker2d(MujocoSoftActorCriticDataset):
-    name = 'Walker2d-v2'
-    observation_dimension = 17
-    action_dimension = 6
-
 
 ##########################
 
@@ -936,3 +767,6 @@ def get_regression_data(name, *args, **kwargs):
 
 def get_classification_data(name, *args, **kwargs):
     return _ALL_CLASSIFICATION_DATATSETS[name](*args, **kwargs)
+
+
+
