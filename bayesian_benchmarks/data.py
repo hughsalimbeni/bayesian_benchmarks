@@ -755,7 +755,11 @@ for name, N, D, K in classification_datasets:
         name, N, D, K = name, N, D, K
 
 
-path_to_mujoco_dataset = '/home/felix/Desktop/policy_destination'
+# This is a temporary solution until we make the data sets publicly available
+path_to_mujoco_dataset = None
+if path_to_mujoco_dataset is None:
+    raise Exception('Specify path to Mujoco data set')
+
 policy_checkpoints = [str(i * 100000) for i in range(11)]
 evaluation_suffix = 'sac_policy.eval'
 evaluations = 10
@@ -763,8 +767,14 @@ evaluations = 10
 
 class MujocoSoftActorCriticDataset(Dataset):
     """
-    The dimensions of the observation space and the action space are given by
-    the attributes `observation_dimension' and `action_dimension' respectively
+    A single Mujoco data set for one specific environment was created as follows. A soft actor-critic agent
+    [Haarnoja 2018 ICML] was trained for 1 million time steps and 11 policy checkpoints created every 100,000 steps
+    (including step 0). After that, each policy checkpoint was evaluated offline 10 times yielding 10 trajectories
+    with a maximum length of 1,000. The Bayesian benchmark data sets create a single training and test set from
+    ALL the policy transitions WITHOUT distinguishing different policy checkpoints. The inputs `X' are concatenated
+    observation-action pairs, the outputs `Y' are the next-observation-observation difference vectors concatenated with
+    the scalar reward signal. The dimensions of the observation space and the action space are given by the attributes
+     `observation_dimension' and `action_dimension' respectively.
     """
 
     @property
