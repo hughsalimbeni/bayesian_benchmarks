@@ -757,8 +757,6 @@ for name, N, D, K in classification_datasets:
 
 # This is a temporary solution until we make the data sets publicly available
 path_to_mujoco_dataset = None
-if path_to_mujoco_dataset is None:
-    raise Exception('Specify path to Mujoco data set')
 
 policy_checkpoints = [str(i * 100000) for i in range(11)]
 evaluation_suffix = 'sac_policy.eval'
@@ -789,11 +787,13 @@ class MujocoSoftActorCriticDataset(Dataset):
         return False
 
     def download(self):
+        if path_to_mujoco_dataset is None:
+            raise ValueError('Specify path to Mujoco data set')
         if not os.path.isdir(path_to_mujoco_dataset):
-            raise Exception('Path to Mujoco dataset does not contain a directory')
+            raise ValueError('Path to Mujoco dataset does not contain a directory')
         source = os.path.join(path_to_mujoco_dataset, 'env=' + self.name)
         if not os.path.isdir(source):
-            raise Exception('There is no experiment for the environment ' + self.name)
+            raise ValueError('There is no experiment for the environment ' + self.name)
         shutil.copytree(source, self.datadir)
 
     def read_data(self):
