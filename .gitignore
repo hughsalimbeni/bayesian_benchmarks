@@ -105,3 +105,6 @@ venv.bak/
 
 # Intellij files
 .idea/
+
+# data
+bayesian_benchmarks/data
