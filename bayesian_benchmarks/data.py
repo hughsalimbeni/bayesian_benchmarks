@@ -755,8 +755,22 @@ for name, N, D, K in classification_datasets:
         name, N, D, K = name, N, D, K
 
 
-# This is a temporary solution until we make the data sets publicly available
-path_to_mujoco_dataset = None
+# URLs of Mujoco data sets
+urls_mujoco_dataset = {'Ant-v2': 'https://drive.google.com/uc?export=download&id=1NdoF79nOg53_fjTlth4iN1RHpQRYgYw0',
+                       'HalfCheetah-v2': 'https://drive.google.com/uc?export=download&id=1lcxCBRKFG-9JzcLroLSd6e-GgagcEnY6',
+                       'Hopper-v2': 'https://drive.google.com/uc?export=download&id=10BZ_4n7a14K1wV_2Z6Ne-BT6SLJnm4U9',
+                       'Humanoid-v2': 'https://drive.google.com/uc?export=download&id=1K_juBeAuCeMGNAqnWDFUoAYvQDYXyaTB',
+                       'Humanoid-v2-1': 'https://drive.google.com/uc?export=download&id=1Sjai5ksAgud8ipVCADtLuIlcOMkB01WP',
+                       'Humanoid-v2-2': 'https://drive.google.com/uc?export=download&id=1EfvIZ7oPy0hNgXOVxXIv8gu9ZkK4wHlw',
+                       'Humanoid-v2-3': 'https://drive.google.com/uc?export=download&id=1YZMqBBNt-7fky3SDeJ-NvdzcCgzD7XGk',
+                       'Humanoid-v2-4': 'https://drive.google.com/uc?export=download&id=1-FVKSOJQIA7PiKpVoXXfHl7Q19U9e0_o',
+                       'Humanoid-v2-5': 'https://drive.google.com/uc?export=download&id=1wWtZaYI_Pm_t_PCSIQ5yZIU4MGIvgoyy',
+                       'InvertedDoublePendulum-v2': 'https://drive.google.com/uc?export=download&id=1qqasWqUtBKq49ylAtiCj6hnL365APwj2',
+                       'InvertedPendulum-v2': 'https://drive.google.com/uc?export=download&id=1cTsIsxUcIQpZ-INHnDBaQtHOuyWMLPJp',
+                       'Pendulum-v0': 'https://drive.google.com/uc?export=download&id=11-T5IBWniyw3EF0z4TgvUvRgCQ8_QpTm',
+                       'Reacher-v2': 'https://drive.google.com/uc?export=download&id=1uVj4MOb4xYk5aXmdsf6cIDVCHVVsafYQ',
+                       'Swimmer-v2': 'https://drive.google.com/uc?export=download&id=1narm3mDgVSFzE26kHzy2Mkif6XR_DSuB',
+                       'Walker2d-v2': 'https://drive.google.com/uc?export=download&id=1i3sG35FSPHdZ0S-VqyPF0a9gCoh9NdWz'}
 
 policy_checkpoints = [str(i * 100000) for i in range(11)]
 evaluation_suffix = 'sac_policy.eval'
@@ -765,14 +779,16 @@ evaluations = 10
 
 class MujocoSoftActorCriticDataset(Dataset):
     """
-    A single Mujoco data set for one specific environment was created as follows. A soft actor-critic agent
-    [Haarnoja 2018 ICML] was trained for 1 million time steps and 11 policy checkpoints created every 100,000 steps
-    (including step 0). After that, each policy checkpoint was evaluated offline 10 times yielding 10 trajectories
-    with a maximum length of 1,000. The Bayesian benchmark data sets create a single training and test set from
-    ALL the policy transitions WITHOUT distinguishing different policy checkpoints. The inputs `X' are concatenated
-    observation-action pairs, the outputs `Y' are the next-observation-observation difference vectors concatenated with
-    the scalar reward signal. The dimensions of the observation space and the action space are given by the attributes
-     `observation_dimension' and `action_dimension' respectively.
+    A single Mujoco data set for one specific environment was created as follows. A soft actor-critic agent [Haarnoja et al.,
+    Soft Actor-Critic: Off-Policy Maximum Entropy Deep Reinforcement Learning with a Stochastic Actor, ICML, 2018] was trained
+    for 1 million time steps and 11 policy checkpoints created every 100,000 steps (including step 0) using the implementation
+    of [Leibfried et al., A Unified Bellman Optimality Principle Combining Reward Maximization and Empowerment, arXiv, 2019].
+    After that, each policy checkpoint was evaluated offline 10 times yielding 10 trajectories with a maximum length of 1,000.
+    The Bayesian benchmark data sets create a single training and test set from ALL the policy transitions WITHOUT
+    distinguishing different policy checkpoints. The inputs `X' are concatenated observation-action pairs, the outputs `Y' are
+    the next-observation-observation difference vectors concatenated with the scalar reward signal. The dimensions of the
+    observation space and the action space are given by the attributes `observation_dimension' and `action_dimension'
+    respectively.
     """
 
     @property
@@ -787,14 +803,14 @@ class MujocoSoftActorCriticDataset(Dataset):
         return False
 
     def download(self):
-        if path_to_mujoco_dataset is None:
-            raise ValueError('Specify path to Mujoco data set')
-        if not os.path.isdir(path_to_mujoco_dataset):
-            raise ValueError('Path to Mujoco dataset does not contain a directory')
-        source = os.path.join(path_to_mujoco_dataset, 'env=' + self.name)
-        if not os.path.isdir(source):
-            raise ValueError('There is no experiment for the environment ' + self.name)
-        shutil.copytree(source, self.datadir)
+        filename = self.datadir + '.zip'
+        with urlopen(self.url_mujoco_dataset) as response, open(filename, 'wb') as out_file:
+            data = response.read()
+            out_file.write(data)
+        zip_ref = zipfile.ZipFile(filename, 'r')
+        zip_ref.extractall(self.datadir)
+        zip_ref.close()
+        os.remove(filename)
 
     def read_data(self):
         """
@@ -805,9 +821,12 @@ class MujocoSoftActorCriticDataset(Dataset):
                  Y_raw [transitions x (observation_dimension + 1)]
         """
         X_raw, Y_raw = None, None
+        outer_evaluation_dir = os.path.join(self.datadir, 'env=' + self.name)
+        if not os.path.isdir(outer_evaluation_dir):
+            raise Exception('There is no evaluation direcory for environment ' + self.name)
         for policy_checkpoint in policy_checkpoints:
 
-            evaluation_dir = os.path.join(self.datadir, 'environment_step=' + policy_checkpoint)
+            evaluation_dir = os.path.join(outer_evaluation_dir, 'environment_step=' + policy_checkpoint)
             if not os.path.isdir(evaluation_dir):
                 raise Exception('There is no evaluation direcory for policy checkpoint ' + policy_checkpoint)
 
@@ -866,6 +885,7 @@ class MujocoSoftActorCriticDataset(Dataset):
 @add_regression
 class Ant(MujocoSoftActorCriticDataset):
     name = 'Ant-v2'
+    url_mujoco_dataset = urls_mujoco_dataset[name]
     observation_dimension = 111
     action_dimension = 8
 
@@ -873,6 +893,7 @@ class Ant(MujocoSoftActorCriticDataset):
 @add_regression
 class HalfCheetah(MujocoSoftActorCriticDataset):
     name = 'HalfCheetah-v2'
+    url_mujoco_dataset = urls_mujoco_dataset[name]
     observation_dimension = 17
     action_dimension = 6
 
@@ -880,6 +901,7 @@ class HalfCheetah(MujocoSoftActorCriticDataset):
 @add_regression
 class Hopper(MujocoSoftActorCriticDataset):
     name = 'Hopper-v2'
+    url_mujoco_dataset = urls_mujoco_dataset[name]
     observation_dimension = 11
     action_dimension = 3
 
@@ -887,13 +909,44 @@ class Hopper(MujocoSoftActorCriticDataset):
 @add_regression
 class Humanoid(MujocoSoftActorCriticDataset):
     name = 'Humanoid-v2'
+    url_mujoco_sub_datasets = {'1': urls_mujoco_dataset[name + '-1'],
+                               '2': urls_mujoco_dataset[name + '-2'],
+                               '3': urls_mujoco_dataset[name + '-3'],
+                               '4': urls_mujoco_dataset[name + '-4'],
+                               '5': urls_mujoco_dataset[name + '-5']}
     observation_dimension = 376
     action_dimension = 17
+
+    def download(self):
+        for i in range(1, 6):
+            filename = self.datadir + '-' + str(i) + '.zip'
+            with urlopen(self.url_mujoco_sub_datasets[str(i)]) as response, open(filename, 'wb') as out_file:
+                data = response.read()
+                out_file.write(data)
+            zip_ref = zipfile.ZipFile(filename, 'r')
+            zip_ref.extractall(self.datadir + '-' + str(i))
+            zip_ref.close()
+            os.remove(filename)
+        os.mkdir(self.datadir)
+        outer_evaluation_dir = os.path.join(self.datadir, 'env=' + self.name)
+        os.mkdir(outer_evaluation_dir)
+        readme_counter = 0
+        for i in range(1, 6):
+            dirname = os.path.join(self.datadir + '-' + str(i), 'env=' + self.name + '-' + str(i))
+            elements = os.listdir(dirname)
+            for element in elements:
+                if element == 'readme.txt' and readme_counter == 1:
+                    continue
+                if element == 'readme.txt':
+                    readme_counter += 1
+                shutil.move(os.path.join(dirname, element), outer_evaluation_dir)
+            shutil.rmtree(self.datadir + '-' + str(i))
 
 
 @add_regression
 class InvertedDoublePendulum(MujocoSoftActorCriticDataset):
     name = 'InvertedDoublePendulum-v2'
+    url_mujoco_dataset = urls_mujoco_dataset[name]
     observation_dimension = 11
     action_dimension = 1
 
@@ -901,6 +954,7 @@ class InvertedDoublePendulum(MujocoSoftActorCriticDataset):
 @add_regression
 class InvertedPendulum(MujocoSoftActorCriticDataset):
     name = 'InvertedPendulum-v2'
+    url_mujoco_dataset = urls_mujoco_dataset[name]
     observation_dimension = 4
     action_dimension = 1
 
@@ -908,6 +962,7 @@ class InvertedPendulum(MujocoSoftActorCriticDataset):
 @add_regression
 class Pendulum(MujocoSoftActorCriticDataset):
     name = 'Pendulum-v0'
+    url_mujoco_dataset = urls_mujoco_dataset[name]
     observation_dimension = 3
     action_dimension = 1
 
@@ -915,6 +970,7 @@ class Pendulum(MujocoSoftActorCriticDataset):
 @add_regression
 class Reacher(MujocoSoftActorCriticDataset):
     name = 'Reacher-v2'
+    url_mujoco_dataset = urls_mujoco_dataset[name]
     observation_dimension = 11
     action_dimension = 2
 
@@ -922,6 +978,7 @@ class Reacher(MujocoSoftActorCriticDataset):
 @add_regression
 class Swimmer(MujocoSoftActorCriticDataset):
     name = 'Swimmer-v2'
+    url_mujoco_dataset = urls_mujoco_dataset[name]
     observation_dimension = 8
     action_dimension = 2
 
@@ -929,6 +986,7 @@ class Swimmer(MujocoSoftActorCriticDataset):
 @add_regression
 class Walker2d(MujocoSoftActorCriticDataset):
     name = 'Walker2d-v2'
+    url_mujoco_dataset = urls_mujoco_dataset[name]
     observation_dimension = 17
     action_dimension = 6
 
