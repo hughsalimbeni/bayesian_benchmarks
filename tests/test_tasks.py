@@ -136,6 +136,8 @@ class ClassificationDataMock(object):
     X_test, Y_test = np.empty(shape=()), np.array([[0], [1]])
     K = 3  # must be compatible with classification mocks...
 
+# Below correct results computed by hand...
+
 regression_results = {}
 regression_results['test_loglik'] = -9.8963
 regression_results['test_loglik_unnormalized'] = -10.5507
@@ -163,6 +165,8 @@ approximate_classification_results['test_loglik'] = -2.7520
 approximate_classification_results['test_acc'] = 0.0
 approximate_classification_results['Y_test'] = np.array([0, 1, 2])
 approximate_classification_results['p_test'] = np.array([[0.1333, 0.2667, 0.4], [0.3333, 0.4167, 0.5]])
+
+# Below two tests, one for regression and one for classification (exact and approx case respectively)
 
 regression_tuple = (RegressionDataMock(), RegressionMock(), regression_results)
 approx_regression_tuple = (RegressionDataMock(), ApproximateRegressionMock(), approximate_regression_results)
