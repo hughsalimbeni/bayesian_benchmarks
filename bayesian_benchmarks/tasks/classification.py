@@ -13,6 +13,7 @@ import argparse
 import numpy as np
 
 from scipy.stats import multinomial
+from scipy.special import logsumexp
 
 from bayesian_benchmarks.data import get_classification_data
 from bayesian_benchmarks.models.get_model import get_classification_model
@@ -41,6 +42,8 @@ def run(ARGS, data=None, model=None, is_test=False):
     model.fit(data.X_train, data.Y_train)
     p = model.predict(data.X_test)  # N_test, K
 
+    assert len(p.shape) in {2, 3}  # closed form analytic predictions vs. approximate predictions
+
     # clip very large and small probs
     eps = 1e-12
     p = np.clip(p, eps, 1 - eps)
@@ -49,16 +52,36 @@ def run(ARGS, data=None, model=None, is_test=False):
     # evaluation metrics
     res = {}
 
-    logp = multinomial.logpmf(Y_oh, n=1, p=p)
+    if len(p.shape) == 2:  # keep analysis as in the original code in case of 2-dim predictions
 
-    res['test_loglik'] = np.average(logp)
+        logp = multinomial.logpmf(Y_oh, n=1, p=p)
 
-    pred = np.argmax(p, axis=-1)
+        res['test_loglik'] = np.average(logp)
 
-    res['test_acc'] = np.average(np.array(pred == data.Y_test.flatten()).astype(float))
+        pred = np.argmax(p, axis=-1)
 
-    res['Y_test'] = data.Y_test
-    res['p_test'] = p
+        res['test_acc'] = np.average(np.array(pred == data.Y_test.flatten()).astype(float))
+
+        res['Y_test'] = data.Y_test
+        res['p_test'] = p
+
+    else:  # compute metrics in case of 3-dim predictions
+
+        res['test_loglik'] = []
+        res['Y_test'] = data.Y_test
+
+        for n in range(p.shape[0]):  # iterate through samples
+            logp = multinomial.logpmf(Y_oh, n=1, p=p[n])
+            res['test_loglik'].append(logp)
+
+        logp = logsumexp(res['test_loglik'], axis=0) - np.log(p.shape[0])
+        res['test_loglik'] = np.mean(logp)
+
+        p = np.exp(logp)
+        pred = np.argmax(p, axis=-1)
+
+        res['test_acc'] = np.average(np.array(pred == data.Y_test.flatten()).astype(float))
+        res['p_test'] = p
 
     res.update(ARGS.__dict__)
 
