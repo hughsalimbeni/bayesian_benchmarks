@@ -35,16 +35,17 @@ def run(ARGS, data=None, model=None, is_test=False):
     assert len(m.shape) in {2, 3}  # 3-dim in case of approximate predictions (multiple samples per each X)
 
     res = {}
-    eps = 1e-12  # probability threshold
+    log_eps = np.log(1e-12)  # log probability threshold
+    log_1_minus_eps = np.log(1.0 - 1e-12)
 
     if len(m.shape) == 2:  # keep analysis as in the original code in case 2-dim predictions
 
         l = norm.logpdf(data.Y_test, loc=m, scale=v ** 0.5)
-        l = np.maximum(l, np.log(eps))  # clip
+        l = np.clip(l, log_eps, log_1_minus_eps)  # clip
         res['test_loglik'] = np.average(l)
 
         lu = norm.logpdf(data.Y_test * data.Y_std, loc=m * data.Y_std, scale=(v ** 0.5) * data.Y_std)
-        lu = np.maximum(lu, np.log(eps))  # clip
+        lu = np.clip(lu, log_eps, log_1_minus_eps)  # clip
         res['test_loglik_unnormalized'] = np.average(lu)
 
         d = data.Y_test - m
@@ -63,11 +64,11 @@ def run(ARGS, data=None, model=None, is_test=False):
 
         for n in range(m.shape[0]):  # iterate through samples
             l = norm.logpdf(data.Y_test, loc=m[n], scale=v[n] ** 0.5)
-            l = np.maximum(l, np.log(eps))  # clip
+            l = np.clip(l, log_eps, log_1_minus_eps)  # clip
             res['test_loglik'].append(l)
 
             lu = norm.logpdf(data.Y_test * data.Y_std, loc=m[n] * data.Y_std, scale=(v[n] ** 0.5) * data.Y_std)
-            lu = np.maximum(lu, np.log(eps))  # clip
+            lu = np.clip(lu, log_eps, log_1_minus_eps)  # clip
             res['test_loglik_unnormalized'].append(lu)
 
         res['test_loglik'] = logsumexp(res['test_loglik'], axis=0) - np.log(m.shape[0])

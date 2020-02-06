@@ -33,16 +33,15 @@ def run(ARGS, data=None, model=None, is_test=False):
     data = data or get_classification_data(ARGS.dataset, split=ARGS.split)
     model = model or get_classification_model(ARGS.model)(data.K, is_test=is_test, seed=ARGS.seed)
 
-
     def onehot(Y, K):
         return np.eye(K)[Y.flatten().astype(int)].reshape(Y.shape[:-1]+(K,))
 
     Y_oh = onehot(data.Y_test, data.K)[None, :, :]  # 1, N_test, K
 
     model.fit(data.X_train, data.Y_train)
-    p = model.predict(data.X_test)  # N_test, K
+    p = model.predict(data.X_test)  # N_test, K or S, N_test, K
 
-    assert len(p.shape) in {2, 3}  # closed form analytic predictions vs. approximate predictions
+    assert len(p.shape) in {2, 3}  # 3-dim in case of approximate predictions (multiple samples per each X)
 
     # clip very large and small probs
     eps = 1e-12
