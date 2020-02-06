@@ -36,10 +36,10 @@ def run(ARGS, data=None, model=None, is_test=False):
     def onehot(Y, K):
         return np.eye(K)[Y.flatten().astype(int)].reshape(Y.shape[:-1]+(K,))
 
-    Y_oh = onehot(data.Y_test, data.K)[None, :, :]  # 1, N_test, K
+    Y_oh = onehot(data.Y_test, data.K)[None, :, :]  # [1 x N_test x K]
 
     model.fit(data.X_train, data.Y_train)
-    p = model.predict(data.X_test)  # N_test, K or S, N_test, K
+    p = model.predict(data.X_test)  # [N_test x K] or [samples x N_test x K]
 
     assert len(p.shape) in {2, 3}  # 3-dim in case of approximate predictions (multiple samples per each X)
 

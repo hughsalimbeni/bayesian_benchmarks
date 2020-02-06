@@ -29,7 +29,7 @@ def run(ARGS, data=None, model=None, is_test=False):
     model = model or get_regression_model(ARGS.model)(is_test=is_test, seed=ARGS.seed)
 
     model.fit(data.X_train, data.Y_train)
-    m, v = model.predict(data.X_test)
+    m, v = model.predict(data.X_test)  # both [data points x output dim] or [samples x data points x output dim]
 
     assert len(m.shape) == len(v.shape)
     assert len(m.shape) in {2, 3}  # 3-dim in case of approximate predictions (multiple samples per each X)
@@ -71,9 +71,11 @@ def run(ARGS, data=None, model=None, is_test=False):
             lu = np.clip(lu, log_eps, log_1_minus_eps)  # clip
             res['test_loglik_unnormalized'].append(lu)
 
+        # Gaussian mixture predictive likelihood
         res['test_loglik'] = logsumexp(res['test_loglik'], axis=0) - np.log(m.shape[0])
         res['test_loglik'] = np.mean(res['test_loglik'])
 
+        # Gaussian mixture predictive likelihood
         res['test_loglik_unnormalized'] = logsumexp(res['test_loglik_unnormalized'], axis=0) - np.log(m.shape[0])
         res['test_loglik_unnormalized'] = np.mean(res['test_loglik_unnormalized'])
 
