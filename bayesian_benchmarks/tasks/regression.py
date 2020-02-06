@@ -32,19 +32,19 @@ def run(ARGS, data=None, model=None, is_test=False):
     m, v = model.predict(data.X_test)
 
     assert len(m.shape) == len(v.shape)
-    assert len(m.shape) in {2, 3}  # closed form analytic predictions vs. approximate predictions
+    assert len(m.shape) in {2, 3}  # 3-dim in case of approximate predictions (multiple samples per each X)
 
     res = {}
     eps = 1e-12  # probability threshold
 
-    if len(m.shape) == 2:  # keep analysis as in the original code in case of closed form analytic predictions
+    if len(m.shape) == 2:  # keep analysis as in the original code in case 2-dim predictions
 
         l = norm.logpdf(data.Y_test, loc=m, scale=v ** 0.5)
         l = np.maximum(l, np.log(eps))  # clip
         res['test_loglik'] = np.average(l)
 
         lu = norm.logpdf(data.Y_test * data.Y_std, loc=m * data.Y_std, scale=(v ** 0.5) * data.Y_std)
-        lu = np.maximum(lu, eps)  # clip
+        lu = np.maximum(lu, np.log(eps))  # clip
         res['test_loglik_unnormalized'] = np.average(lu)
 
         d = data.Y_test - m
@@ -67,7 +67,7 @@ def run(ARGS, data=None, model=None, is_test=False):
             res['test_loglik'].append(l)
 
             lu = norm.logpdf(data.Y_test * data.Y_std, loc=m[n] * data.Y_std, scale=(v[n] ** 0.5) * data.Y_std)
-            lu = np.maximum(lu, eps)  # clip
+            lu = np.maximum(lu, np.log(eps))  # clip
             res['test_loglik_unnormalized'].append(lu)
 
         res['test_loglik'] = logsumexp(res['test_loglik'], axis=0) - np.log(m.shape[0])
