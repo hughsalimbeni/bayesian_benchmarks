@@ -33,6 +33,7 @@ def run(ARGS, data=None, model=None, is_test=False):
 
     assert len(m.shape) == len(v.shape)
     assert len(m.shape) in {2, 3}  # 3-dim in case of approximate predictions (multiple samples per each X)
+    assert np.all(v >= 0.0)
 
     res = {}
     log_eps = np.log(1e-12)  # log probability threshold

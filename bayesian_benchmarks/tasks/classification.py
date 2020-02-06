@@ -48,6 +48,8 @@ def run(ARGS, data=None, model=None, is_test=False):
     p = np.clip(p, eps, 1 - eps)
     p = p / np.expand_dims(np.sum(p, -1), -1)
 
+    assert np.all(p >= 0.0) and np.all(p <= 1.0)
+
     # evaluation metrics
     res = {}
 

@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import pytest
+import numpy as np
 
 from bayesian_benchmarks.tasks.regression import run as run_regression
 from bayesian_benchmarks.tasks.classification import run as run_classification
@@ -77,3 +78,56 @@ def test_active_learning_discrete(model, dataset):
          'num_initial_points': 10}
 
     run_AL_disc(ConvertToNamespace(d), is_test=True)
+
+
+class RegressionMock(object):
+    """
+    Regression mock.
+    """
+    def fit(self, X: np.ndarray, Y:np.ndarray) -> None:
+        pass
+    def predict(self, X: np.ndarray, Y:np.ndarray) -> (np.ndarray, np.ndarray):
+        mu = np.array([[1., 2., 3.], [4., 5., 6.]])
+        var = np.array([[.1, .2, .3], [.4, .5, .6]])
+        return mu, var
+
+class ApproximateRegressionMock(RegressionMock):
+    """
+    Approximate regression mock.
+    """
+    def predict(self, X: np.ndarray, Y:np.ndarray) -> (np.ndarray, np.ndarray):
+        mu = np.array([[[1., 2., 3.], [4., 5., 6.]], [[1.5, 2.5, 3.5], [4.5, 5.5, 6.5]]])
+        var = np.array([[[.1, .2, .3], [.4, .5, .6]], [[.1, .2, .3], [.4, .5, .6]]])
+        return mu, var
+
+class ClassificationMock(object):
+    """
+    Classification mock.
+    """
+    def fit(self, X: np.ndarray, Y:np.ndarray) -> None:
+        pass
+    def predict(self, X: np.ndarray, Y:np.ndarray) -> np.ndarray:
+        p = np.array([[.1, .2, .3], [.4, .5, .6]])
+        return p
+
+class ApproximateClassificationMock(ClassificationMock):
+    """
+    Approximate classification mock.
+    """
+    def predict(self, X: np.ndarray, Y:np.ndarray) -> np.ndarray:
+        p = np.array([[[.1, .2, .3], [.4, .5, .6]], [[.01, .02, .03], [.04, .05, .06]]])
+        return p
+
+class RegressionDataMock(object):
+    """
+    Regression data mock.
+    """
+    X_train, Y_train, X_test, Y_test = np.empty(shape=())
+    Y_std = 1.0
+
+class ClassificationDataMock(object):
+    """
+    Classification data mock.
+    """
+    X_train, Y_train, X_test, Y_test = np.empty(shape=())
+    K = 3  # must be compatible with classification mocks...
