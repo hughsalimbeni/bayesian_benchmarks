@@ -57,7 +57,7 @@ def run(ARGS, data=None, model=None, is_test=False):
         res['test_rmse'] = np.average(d ** 2) ** 0.5
         res['test_rmse_unnormalized'] = np.average(du ** 2) ** 0.5
 
-    else:  # compute metrics in case of approximate predictions
+    else:  # compute metrics in case of 3-dim predictions
 
         res['test_loglik'] = []
         res['test_loglik_unnormalized'] = []

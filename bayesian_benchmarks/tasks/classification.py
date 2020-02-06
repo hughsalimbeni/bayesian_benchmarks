@@ -51,7 +51,7 @@ def run(ARGS, data=None, model=None, is_test=False):
     # evaluation metrics
     res = {}
 
-    if len(p.shape) == 2:  # keep analysis as in the original code in case of 2-dim predictions
+    if len(p.shape) == 2:  # keep analysis as in the original code in case 2-dim predictions
 
         logp = multinomial.logpmf(Y_oh, n=1, p=p)
 
