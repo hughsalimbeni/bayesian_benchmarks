@@ -163,3 +163,29 @@ approximate_classification_results['test_loglik'] = -2.7520
 approximate_classification_results['test_acc'] = 0.0
 approximate_classification_results['Y_test'] = np.array([0, 1, 2])
 approximate_classification_results['p_test'] = np.array([[0.1333, 0.2667, 0.4], [0.3333, 0.4167, 0.5]])
+
+regression_tuple = (RegressionDataMock(), RegressionMock(), regression_results)
+approx_regression_tuple = (RegressionDataMock(), ApproximateRegressionMock(), approximate_regression_results)
+
+@pytest.mark.parametrize('tuple', [regression_tuple, approx_regression_tuple])
+def test_regression(tuple):
+    data, model, correct_result = tuple
+    result = run_regression(None, data=data, model=model, is_test=True)
+    assert correct_result['test_loglik'] == pytest.approx(result['test_loglik'], 1e-3)
+    assert correct_result['test_loglik_unnormalized'] == pytest.approx(result['test_loglik_unnormalized'], 1e-3)
+    assert correct_result['test_mae'] == pytest.approx(result['test_mae'], 1e-3)
+    assert correct_result['test_mae_unnormalized'] == pytest.approx(result['test_mae_unnormalized'], 1e-3)
+    assert correct_result['test_rmse'] == pytest.approx(result['test_rmse'], 1e-3)
+    assert correct_result['test_rmse_unnormalized'] == pytest.approx(result['test_rmse_unnormalized'], 1e-3)
+
+classification_tuple = (ClassificationDataMock(), ClassificationMock(), classification_results)
+approx_classification_tuple = (ClassificationDataMock(), ApproximateClassificationMock(), approximate_classification_results)
+
+@pytest.mark.parametrize('tuple', [classification_tuple, approx_classification_tuple])
+def test_regression(tuple):
+    data, model, correct_result = tuple
+    result = run_classification(None, data=data, model=model, is_test=True)
+    assert correct_result['test_loglik'] == pytest.approx(result['test_loglik'], 1e-3)
+    assert correct_result['test_acc'] == pytest.approx(result['test_acc'], 1e-3)
+    assert np.allclose(correct_result['Y_test'], result['Y_test'], rtol=0.0, atol=1e-3)
+    assert np.allclose(correct_result['p_test'], result['p_test'], rtol=0.0, atol=1e-3)
