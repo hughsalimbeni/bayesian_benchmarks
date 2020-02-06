@@ -34,7 +34,7 @@ def run(ARGS, data=None, model=None, is_test=False):
     model = model or get_classification_model(ARGS.model)(data.K, is_test=is_test, seed=ARGS.seed)
 
     def onehot(Y, K):
-        return np.eye(K)[Y.flatten().astype(int)].reshape(Y.shape[:-1]+(K,))
+        return np.eye(K)[Y.flatten().astype(int)].reshape(Y.shape[:-1] + (K,))
 
     Y_oh = onehot(data.Y_test, data.K)[None, :, :]  # [1 x N_test x K]
 
@@ -78,7 +78,7 @@ def run(ARGS, data=None, model=None, is_test=False):
         logp = logsumexp(res['test_loglik'], axis=0) - np.log(p.shape[0])
         res['test_loglik'] = np.mean(logp)
 
-        p = np.exp(logp)
+        p = np.mean(p, axis=0)
         pred = np.argmax(p, axis=-1)
 
         res['test_acc'] = np.average(np.array(pred == data.Y_test.flatten()).astype(float))

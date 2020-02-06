@@ -80,13 +80,15 @@ def test_active_learning_discrete(model, dataset):
     run_AL_disc(ConvertToNamespace(d), is_test=True)
 
 
+# Testing modified regression and classification runs with mocks
+
 class RegressionMock(object):
     """
     Regression mock.
     """
     def fit(self, X: np.ndarray, Y:np.ndarray) -> None:
         pass
-    def predict(self, X: np.ndarray, Y:np.ndarray) -> (np.ndarray, np.ndarray):
+    def predict(self, X: np.ndarray) -> (np.ndarray, np.ndarray):
         mu = np.array([[1., 2., 3.], [4., 5., 6.]])
         var = np.array([[.1, .2, .3], [.4, .5, .6]])
         return mu, var
@@ -95,7 +97,7 @@ class ApproximateRegressionMock(RegressionMock):
     """
     Approximate regression mock.
     """
-    def predict(self, X: np.ndarray, Y:np.ndarray) -> (np.ndarray, np.ndarray):
+    def predict(self, X: np.ndarray) -> (np.ndarray, np.ndarray):
         mu = np.array([[[1., 2., 3.], [4., 5., 6.]], [[1.5, 2.5, 3.5], [4.5, 5.5, 6.5]]])
         var = np.array([[[.1, .2, .3], [.4, .5, .6]], [[.1, .2, .3], [.4, .5, .6]]])
         return mu, var
@@ -106,7 +108,7 @@ class ClassificationMock(object):
     """
     def fit(self, X: np.ndarray, Y:np.ndarray) -> None:
         pass
-    def predict(self, X: np.ndarray, Y:np.ndarray) -> np.ndarray:
+    def predict(self, X: np.ndarray) -> np.ndarray:
         p = np.array([[.1, .2, .3], [.4, .5, .6]])
         return p
 
@@ -114,7 +116,7 @@ class ApproximateClassificationMock(ClassificationMock):
     """
     Approximate classification mock.
     """
-    def predict(self, X: np.ndarray, Y:np.ndarray) -> np.ndarray:
+    def predict(self, X: np.ndarray) -> np.ndarray:
         p = np.array([[[.1, .2, .3], [.4, .5, .6]], [[.01, .02, .03], [.04, .05, .06]]])
         return p
 
@@ -122,12 +124,42 @@ class RegressionDataMock(object):
     """
     Regression data mock.
     """
-    X_train, Y_train, X_test, Y_test = np.empty(shape=())
-    Y_std = 1.0
+    X_train, Y_train = np.empty(shape=()), np.empty(shape=())
+    X_test, Y_test = np.empty(shape=()), np.array([1.])
+    Y_std = 2.
 
 class ClassificationDataMock(object):
     """
     Classification data mock.
     """
-    X_train, Y_train, X_test, Y_test = np.empty(shape=())
+    X_train, Y_train = np.empty(shape=()), np.empty(shape=())
+    X_test, Y_test = np.empty(shape=()), np.array([[0], [1]])
     K = 3  # must be compatible with classification mocks...
+
+regression_results = {}
+regression_results['test_loglik'] = -9.8963
+regression_results['test_loglik_unnormalized'] = -10.5507
+regression_results['test_mae'] = 2.5
+regression_results['test_mae_unnormalized'] = 5.0
+regression_results['test_rmse'] = 3.0277
+regression_results['test_rmse_unnormalized'] = 6.0553
+
+approximate_regression_results = {}
+approximate_regression_results['test_loglik'] = -11.8266
+approximate_regression_results['test_loglik_unnormalized'] = -12.4904
+approximate_regression_results['test_mae'] = 2.75
+approximate_regression_results['test_mae_unnormalized'] = 5.5
+approximate_regression_results['test_rmse'] = 3.2372
+approximate_regression_results['test_rmse_unnormalized'] = 6.4743
+
+classification_results = {}
+classification_results['test_loglik'] = -1.4452
+classification_results['test_acc'] = 0.0
+classification_results['Y_test'] = np.array([0, 1, 2])
+classification_results['p_test'] = np.array([[0.1667, 0.3333, 0.5], [0.2667, 0.3333, 0.4]])
+
+approximate_classification_results = {}
+approximate_classification_results['test_loglik'] = -2.7520
+approximate_classification_results['test_acc'] = 0.0
+approximate_classification_results['Y_test'] = np.array([0, 1, 2])
+approximate_classification_results['p_test'] = np.array([[0.1333, 0.2667, 0.4], [0.3333, 0.4167, 0.5]])
