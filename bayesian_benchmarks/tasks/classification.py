@@ -75,6 +75,7 @@ def run(ARGS, data=None, model=None, is_test=False):
             logp = multinomial.logpmf(Y_oh, n=1, p=p[n])
             res['test_loglik'].append(logp)
 
+        # Mixture test likelihood (mean over per data point evaluations)
         logp = logsumexp(res['test_loglik'], axis=0) - np.log(p.shape[0])
         res['test_loglik'] = np.mean(logp)
 

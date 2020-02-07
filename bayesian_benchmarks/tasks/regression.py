@@ -39,7 +39,7 @@ def run(ARGS, data=None, model=None, is_test=False):
     log_eps = np.log(1e-12)  # log probability threshold
     log_1_minus_eps = np.log(1.0 - 1e-12)
 
-    if len(m.shape) == 2:  # keep analysis as in the original code in case 2-dim predictions
+    if len(m.shape) == 2:  # keep analysis as in the original code in case of 2-dim predictions
 
         l = norm.logpdf(data.Y_test, loc=m, scale=v ** 0.5)
         l = np.clip(l, log_eps, log_1_minus_eps)  # clip
@@ -72,11 +72,11 @@ def run(ARGS, data=None, model=None, is_test=False):
             lu = np.clip(lu, log_eps, log_1_minus_eps)  # clip
             res['test_loglik_unnormalized'].append(lu)
 
-        # Gaussian mixture predictive likelihood
+        # Mixture test likelihood (mean over per data point evaluations)
         res['test_loglik'] = logsumexp(res['test_loglik'], axis=0) - np.log(m.shape[0])
         res['test_loglik'] = np.mean(res['test_loglik'])
 
-        # Gaussian mixture predictive likelihood
+        # Mixture test likelihood (mean over per data point evaluations)
         res['test_loglik_unnormalized'] = logsumexp(res['test_loglik_unnormalized'], axis=0) - np.log(m.shape[0])
         res['test_loglik_unnormalized'] = np.mean(res['test_loglik_unnormalized'])
 
