@@ -109,7 +109,7 @@ class ClassificationMock(object):
     def fit(self, X: np.ndarray, Y:np.ndarray) -> None:
         pass
     def predict(self, X: np.ndarray) -> np.ndarray:
-        p = np.array([[.1, .2, .3], [.4, .5, .6]])
+        p = np.array([[.1, .2, .7], [.6, .3, .1]])
         return p
 
 class ApproximateClassificationMock(ClassificationMock):
@@ -117,7 +117,7 @@ class ApproximateClassificationMock(ClassificationMock):
     Approximate classification mock.
     """
     def predict(self, X: np.ndarray) -> np.ndarray:
-        p = np.array([[[.1, .2, .3], [.4, .5, .6]], [[.01, .02, .03], [.04, .05, .06]]])
+        p = np.array([[[.1, .2, .7], [.6, .3, .1]], [[.01, .02, .97], [.64, .05, .31]]])
         return p
 
 class RegressionDataMock(object):
@@ -155,16 +155,16 @@ approximate_regression_results['test_rmse'] = 3.2372
 approximate_regression_results['test_rmse_unnormalized'] = 6.4743
 
 classification_results = {}
-classification_results['test_loglik'] = -1.4452
+classification_results['test_loglik'] = -1.7533
 classification_results['test_acc'] = 0.0
-classification_results['Y_test'] = np.array([0, 1, 2])
-classification_results['p_test'] = np.array([[0.1667, 0.3333, 0.5], [0.2667, 0.3333, 0.4]])
+classification_results['Y_test'] = np.array([[0], [1]])
+classification_results['p_test'] = np.array([[.1, .2, .7], [.6, .3, .1]])
 
 approximate_classification_results = {}
-approximate_classification_results['test_loglik'] = -2.7520
+approximate_classification_results['test_loglik'] = -3.6285
 approximate_classification_results['test_acc'] = 0.0
-approximate_classification_results['Y_test'] = np.array([0, 1, 2])
-approximate_classification_results['p_test'] = np.array([[0.1333, 0.2667, 0.4], [0.3333, 0.4167, 0.5]])
+approximate_classification_results['Y_test'] = np.array([[0], [1]])
+approximate_classification_results['p_test'] = np.array([[0.055, 0.11 , 0.835], [0.62 , 0.175, 0.205]])
 
 # Below two tests, one for regression and one for classification (exact and approx case respectively)
 
