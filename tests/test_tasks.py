@@ -166,7 +166,7 @@ approximate_classification_results['test_acc'] = 0.0
 approximate_classification_results['Y_test'] = np.array([[0], [1]])
 approximate_classification_results['p_test'] = np.array([[0.055, 0.11 , 0.835], [0.62 , 0.175, 0.205]])
 
-# Below two tests, one for regression and one for classification (exact and approx case respectively)
+# Below two tests, one for regression and one for classification (2-dim and 3-dim case respectively)
 
 regression_tuple = (RegressionDataMock(), RegressionMock(), regression_results)
 approx_regression_tuple = (RegressionDataMock(), ApproximateRegressionMock(), approximate_regression_results)
