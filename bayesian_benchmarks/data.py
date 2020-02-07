@@ -147,7 +147,7 @@ class Energy(Dataset):
 
 
 @add_regression
-class Kin8mn(Dataset):
+class Kin8nm(Dataset):
     N, D, name = 8192, 8, 'kin8nm'
     # url = 'http://mldata.org/repository/data/download/csv/uci-20070111-kin8nm'
     url = 'http://mldata.org/repository/data/download/csv/csv_result-kin8nm'
