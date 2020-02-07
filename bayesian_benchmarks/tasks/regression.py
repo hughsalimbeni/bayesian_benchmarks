@@ -89,7 +89,8 @@ def run(ARGS, data=None, model=None, is_test=False):
         res['test_rmse'] = np.average(d ** 2) ** 0.5
         res['test_rmse_unnormalized'] = np.average(du ** 2) ** 0.5
 
-    res.update(ARGS.__dict__)
+    if not is_test:
+        res.update(ARGS.__dict__)
 
     if not is_test:  # pragma: no cover
         with Database(ARGS.database_path) as db:

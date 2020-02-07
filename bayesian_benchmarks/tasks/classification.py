@@ -84,7 +84,8 @@ def run(ARGS, data=None, model=None, is_test=False):
         res['test_acc'] = np.average(np.array(pred == data.Y_test.flatten()).astype(float))
         res['p_test'] = p
 
-    res.update(ARGS.__dict__)
+    if not is_test:
+        res.update(ARGS.__dict__)
 
     if not is_test:  # pragma: no cover
         with Database(ARGS.database_path) as db:

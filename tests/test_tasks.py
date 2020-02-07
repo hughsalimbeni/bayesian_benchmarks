@@ -147,8 +147,8 @@ regression_results['test_rmse'] = 3.0277
 regression_results['test_rmse_unnormalized'] = 6.0553
 
 approximate_regression_results = {}
-approximate_regression_results['test_loglik'] = -11.8266
-approximate_regression_results['test_loglik_unnormalized'] = -12.4904
+approximate_regression_results['test_loglik'] = -10.5197
+approximate_regression_results['test_loglik_unnormalized'] = -11.1836
 approximate_regression_results['test_mae'] = 2.75
 approximate_regression_results['test_mae_unnormalized'] = 5.5
 approximate_regression_results['test_rmse'] = 3.2372
@@ -161,7 +161,7 @@ classification_results['Y_test'] = np.array([[0], [1]])
 classification_results['p_test'] = np.array([[.1, .2, .7], [.6, .3, .1]])
 
 approximate_classification_results = {}
-approximate_classification_results['test_loglik'] = -3.6285
+approximate_classification_results['test_loglik'] = -2.3217
 approximate_classification_results['test_acc'] = 0.0
 approximate_classification_results['Y_test'] = np.array([[0], [1]])
 approximate_classification_results['p_test'] = np.array([[0.055, 0.11 , 0.835], [0.62 , 0.175, 0.205]])
