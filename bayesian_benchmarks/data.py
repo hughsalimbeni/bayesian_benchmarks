@@ -149,10 +149,14 @@ class Energy(Dataset):
 @add_regression
 class Kin8mn(Dataset):
     N, D, name = 8192, 8, 'kin8nm'
-    url = 'http://mldata.org/repository/data/download/csv/uci-20070111-kin8nm'
+    # url = 'http://mldata.org/repository/data/download/csv/uci-20070111-kin8nm'
+    url = 'http://mldata.org/repository/data/download/csv/csv_result-kin8nm'
     def read_data(self):
         data = pandas.read_csv(self.datapath, header=None).values
-        return data[:, :-1], data[:, -1].reshape(-1, 1)
+        X_raw, Y_raw = data[1:, 1:-1], data[1:, -1].reshape(-1, 1)
+        assert X_raw.shape == (self.N, self.D)
+        assert Y_raw.shape == (self.N, 1)
+        return X_raw.astype(np.float), Y_raw.astype(np.float)
 
 
 @add_regression
