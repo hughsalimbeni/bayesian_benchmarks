@@ -125,8 +125,8 @@ class RegressionDataMock(object):
     Regression data mock.
     """
     X_train, Y_train = np.empty(shape=()), np.empty(shape=())
-    X_test, Y_test = np.empty(shape=()), np.array([1.])
-    Y_std = 2.
+    X_test, Y_test = np.empty(shape=()), np.array([[1., 1., 1.], [1., 1., 1.]])
+    Y_std = 2.  # Y_test must be compatible with regression mocks...
 
 class ClassificationDataMock(object):
     """
@@ -134,7 +134,7 @@ class ClassificationDataMock(object):
     """
     X_train, Y_train = np.empty(shape=()), np.empty(shape=())
     X_test, Y_test = np.empty(shape=()), np.array([[0], [1]])
-    K = 3  # must be compatible with classification mocks...
+    K = 3  # Y_test and K must be compatible with classification mocks...
 
 # Below correct results computed by hand...
 
