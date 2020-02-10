@@ -8,11 +8,11 @@ Metrics reported are test log likelihood, mean squared error, and absolute error
 import argparse
 import numpy as np
 from scipy.stats import norm
-from scipy.special import logsumexp
 
 from bayesian_benchmarks.data import get_regression_data
 from bayesian_benchmarks.database_utils import Database
 from bayesian_benchmarks.models.get_model import get_regression_model
+from bayesian_benchmarks.tasks.utils import meansumexp
 
 def parse_args():  # pragma: no cover
     parser = argparse.ArgumentParser()
@@ -41,7 +41,7 @@ def run(ARGS, data=None, model=None, is_test=False):
 
     if len(m.shape) == 2:  # keep analysis as in the original code in case of 2-dim predictions
 
-        l = norm.logpdf(data.Y_test, loc=m, scale=v ** 0.5)
+        l = norm.logpdf(data.Y_test, loc=m, scale=v ** 0.5)  # []
         l = np.clip(l, log_eps, log_1_minus_eps)  # clip
         res['test_loglik'] = np.average(l)
 
@@ -73,12 +73,10 @@ def run(ARGS, data=None, model=None, is_test=False):
             res['test_loglik_unnormalized'].append(lu)
 
         # Mixture test likelihood (mean over per data point evaluations)
-        res['test_loglik'] = logsumexp(res['test_loglik'], axis=0) - np.log(m.shape[0])
-        res['test_loglik'] = np.mean(res['test_loglik'])
+        res['test_loglik'] = meansumexp(res['test_loglik'])
 
         # Mixture test likelihood (mean over per data point evaluations)
-        res['test_loglik_unnormalized'] = logsumexp(res['test_loglik_unnormalized'], axis=0) - np.log(m.shape[0])
-        res['test_loglik_unnormalized'] = np.mean(res['test_loglik_unnormalized'])
+        res['test_loglik_unnormalized'] = meansumexp(res['test_loglik_unnormalized'])
 
         d = data.Y_test - np.mean(m, axis=0)
         du = d * data.Y_std
