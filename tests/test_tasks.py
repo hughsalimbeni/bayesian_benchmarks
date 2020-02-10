@@ -186,7 +186,7 @@ classification_tuple = (ClassificationDataMock(), ClassificationMock(), classifi
 approx_classification_tuple = (ClassificationDataMock(), ApproximateClassificationMock(), approximate_classification_results)
 
 @pytest.mark.parametrize('tuple', [classification_tuple, approx_classification_tuple])
-def test_regression(tuple):
+def test_classification(tuple):
     data, model, correct_result = tuple
     result = run_classification(None, data=data, model=model, is_test=True)
     assert correct_result['test_loglik'] == pytest.approx(result['test_loglik'], 1e-3)
