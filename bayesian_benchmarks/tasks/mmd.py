@@ -28,9 +28,9 @@ def parse_args():  #pragma: no cover
 
 
 def mmd(A, B, kernel):
-    KAA = kernel.compute_K_symm(A)
-    KAB = kernel.compute_K(A, B)
-    KBB = kernel.compute_K_symm(A)
+    KAA = kernel.K(A, A)
+    KAB = kernel.K(A, B)
+    KBB = kernel.K(B, B)
 
     n = float(A.shape[0])
     m = float(B.shape[0])
