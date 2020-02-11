@@ -12,7 +12,7 @@ from scipy.stats import norm
 from bayesian_benchmarks.data import get_regression_data
 from bayesian_benchmarks.database_utils import Database
 from bayesian_benchmarks.models.get_model import get_regression_model
-from bayesian_benchmarks.tasks.utils import meansumexp
+from bayesian_benchmarks.tasks.utils import meanlogsumexp
 
 def parse_args():  # pragma: no cover
     parser = argparse.ArgumentParser()
@@ -73,10 +73,10 @@ def run(ARGS, data=None, model=None, is_test=False):
             res['test_loglik_unnormalized'].append(lu)
 
         # Mixture test likelihood (mean over per data point evaluations)
-        res['test_loglik'] = meansumexp(res['test_loglik'])
+        res['test_loglik'] = meanlogsumexp(res['test_loglik'])
 
         # Mixture test likelihood (mean over per data point evaluations)
-        res['test_loglik_unnormalized'] = meansumexp(res['test_loglik_unnormalized'])
+        res['test_loglik_unnormalized'] = meanlogsumexp(res['test_loglik_unnormalized'])
 
         d = data.Y_test - np.mean(m, axis=0)
         du = d * data.Y_std
