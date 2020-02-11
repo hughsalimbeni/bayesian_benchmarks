@@ -31,15 +31,15 @@ def run(ARGS, data=None, model=None, is_test=False):
     model.fit(data.X_train, data.Y_train)
     m, v = model.predict(data.X_test)  # both [data points x output dim] or [samples x data points x output dim]
 
-    assert len(m.shape) == len(v.shape)
-    assert len(m.shape) in {2, 3}  # 3-dim in case of approximate predictions (multiple samples per each X)
+    assert m.ndim == v.ndim
+    assert m.ndim in {2, 3}  # 3-dim in case of approximate predictions (multiple samples per each X)
     assert np.all(v >= 0.0)
 
     res = {}
     log_eps = np.log(1e-12)  # log probability threshold
     log_1_minus_eps = np.log(1.0 - 1e-12)
 
-    if len(m.shape) == 2:  # keep analysis as in the original code in case of 2-dim predictions
+    if m.ndim == 2:  # keep analysis as in the original code in case of 2-dim predictions
 
         l = norm.logpdf(data.Y_test, loc=m, scale=v ** 0.5)  # []
         l = np.clip(l, log_eps, log_1_minus_eps)  # clip

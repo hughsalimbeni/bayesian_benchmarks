@@ -89,8 +89,8 @@ class RegressionMock(object):
     def fit(self, X: np.ndarray, Y:np.ndarray) -> None:
         pass
     def predict(self, X: np.ndarray) -> (np.ndarray, np.ndarray):
-        mu = np.array([[1., 2., 3.], [4., 5., 6.]])
-        var = np.array([[.1, .2, .3], [.4, .5, .6]])
+        mu = np.array([[1., 2., 3.], [4., 5., 6.]])  # [data points x output dim]
+        var = np.array([[.1, .2, .3], [.4, .5, .6]])  # [data points x output dim]
         return mu, var
 
 class ApproximateRegressionMock(RegressionMock):
@@ -98,8 +98,10 @@ class ApproximateRegressionMock(RegressionMock):
     Approximate regression mock.
     """
     def predict(self, X: np.ndarray) -> (np.ndarray, np.ndarray):
-        mu = np.array([[[1., 2., 3.], [4., 5., 6.]], [[1.5, 2.5, 3.5], [4.5, 5.5, 6.5]]])
-        var = np.array([[[.1, .2, .3], [.4, .5, .6]], [[.1, .2, .3], [.4, .5, .6]]])
+        mu = np.array([[[1., 2., 3.], [4., 5., 6.]],
+                       [[1.5, 2.5, 3.5], [4.5, 5.5, 6.5]]])  # [samples x data points x output dim]
+        var = np.array([[[.1, .2, .3], [.4, .5, .6]],
+                        [[.1, .2, .3], [.4, .5, .6]]])  # [samples x data points x output dim]
         return mu, var
 
 class ClassificationMock(object):
@@ -109,7 +111,7 @@ class ClassificationMock(object):
     def fit(self, X: np.ndarray, Y:np.ndarray) -> None:
         pass
     def predict(self, X: np.ndarray) -> np.ndarray:
-        p = np.array([[.1, .2, .7], [.6, .3, .1]])
+        p = np.array([[.1, .2, .7], [.6, .3, .1]])  # [data points x output dim]
         return p
 
 class ApproximateClassificationMock(ClassificationMock):
@@ -117,7 +119,8 @@ class ApproximateClassificationMock(ClassificationMock):
     Approximate classification mock.
     """
     def predict(self, X: np.ndarray) -> np.ndarray:
-        p = np.array([[[.1, .2, .7], [.6, .3, .1]], [[.01, .02, .97], [.64, .05, .31]]])
+        p = np.array([[[.1, .2, .7], [.6, .3, .1]],
+                      [[.01, .02, .97], [.64, .05, .31]]])  # [samples x data points x output dim]
         return p
 
 class RegressionDataMock(object):
@@ -125,7 +128,7 @@ class RegressionDataMock(object):
     Regression data mock.
     """
     X_train, Y_train = np.empty(shape=()), np.empty(shape=())
-    X_test, Y_test = np.empty(shape=()), np.array([[1., 1., 1.], [1., 1., 1.]])
+    X_test, Y_test = np.empty(shape=()), np.array([[1., 1., 1.], [1., 1., 1.]])  # [data points x output dim]
     Y_std = 2.  # Y_test must be compatible with regression mocks...
 
 class ClassificationDataMock(object):
@@ -133,7 +136,7 @@ class ClassificationDataMock(object):
     Classification data mock.
     """
     X_train, Y_train = np.empty(shape=()), np.empty(shape=())
-    X_test, Y_test = np.empty(shape=()), np.array([[0], [1]])
+    X_test, Y_test = np.empty(shape=()), np.array([[0], [1]])  # [data points x output dim]
     K = 3  # Y_test and K must be compatible with classification mocks...
 
 # Below correct results computed by hand...
@@ -157,14 +160,10 @@ approximate_regression_results['test_rmse_unnormalized'] = 6.4743
 classification_results = {}
 classification_results['test_loglik'] = -1.7533
 classification_results['test_acc'] = 0.0
-classification_results['Y_test'] = np.array([[0], [1]])
-classification_results['p_test'] = np.array([[.1, .2, .7], [.6, .3, .1]])
 
 approximate_classification_results = {}
 approximate_classification_results['test_loglik'] = -2.3217
 approximate_classification_results['test_acc'] = 0.0
-approximate_classification_results['Y_test'] = np.array([[0], [1]])
-approximate_classification_results['p_test'] = np.array([[0.055, 0.11 , 0.835], [0.62 , 0.175, 0.205]])
 
 # Below two tests, one for regression and one for classification (2-dim and 3-dim case respectively)
 
@@ -175,12 +174,11 @@ approx_regression_tuple = (RegressionDataMock(), ApproximateRegressionMock(), ap
 def test_regression(tuple):
     data, model, correct_result = tuple
     result = run_regression(None, data=data, model=model, is_test=True)
-    assert correct_result['test_loglik'] == pytest.approx(result['test_loglik'], 1e-3)
-    assert correct_result['test_loglik_unnormalized'] == pytest.approx(result['test_loglik_unnormalized'], 1e-3)
-    assert correct_result['test_mae'] == pytest.approx(result['test_mae'], 1e-3)
-    assert correct_result['test_mae_unnormalized'] == pytest.approx(result['test_mae_unnormalized'], 1e-3)
-    assert correct_result['test_rmse'] == pytest.approx(result['test_rmse'], 1e-3)
-    assert correct_result['test_rmse_unnormalized'] == pytest.approx(result['test_rmse_unnormalized'], 1e-3)
+
+    evaluation_metrics = {'test_loglik', 'test_loglik_unnormalized', 'test_mae', 'test_mae_unnormalized',
+                          'test_rmse', 'test_rmse_unnormalized'}
+    for evaluation_metric in evaluation_metrics:
+        np.testing.assert_almost_equal(correct_result[evaluation_metric], result[evaluation_metric], decimal=3)
 
 classification_tuple = (ClassificationDataMock(), ClassificationMock(), classification_results)
 approx_classification_tuple = (ClassificationDataMock(), ApproximateClassificationMock(), approximate_classification_results)
@@ -189,7 +187,7 @@ approx_classification_tuple = (ClassificationDataMock(), ApproximateClassificati
 def test_classification(tuple):
     data, model, correct_result = tuple
     result = run_classification(None, data=data, model=model, is_test=True)
-    assert correct_result['test_loglik'] == pytest.approx(result['test_loglik'], 1e-3)
-    assert correct_result['test_acc'] == pytest.approx(result['test_acc'], 1e-3)
-    assert np.allclose(correct_result['Y_test'], result['Y_test'], rtol=0.0, atol=1e-3)
-    assert np.allclose(correct_result['p_test'], result['p_test'], rtol=0.0, atol=1e-3)
+
+    evaluation_metrics = {'test_loglik', 'test_acc'}
+    for evaluation_metric in evaluation_metrics:
+        np.testing.assert_almost_equal(correct_result[evaluation_metric], result[evaluation_metric], decimal=3)

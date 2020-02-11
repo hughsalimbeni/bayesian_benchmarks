@@ -77,9 +77,6 @@ def run(ARGS, data=None, model=None, is_test=False):
 
     res['test_acc'] = np.average(np.array(pred == data.Y_test.flatten()).astype(float))
 
-    res['Y_test'] = data.Y_test
-    res['p_test'] = p
-
     if not is_test:
         res.update(ARGS.__dict__)
 
