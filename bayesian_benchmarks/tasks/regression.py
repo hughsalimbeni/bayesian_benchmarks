@@ -12,6 +12,7 @@ from scipy.stats import norm
 from bayesian_benchmarks.data import get_regression_data
 from bayesian_benchmarks.database_utils import Database
 from bayesian_benchmarks.models.get_model import get_regression_model
+from bayesian_benchmarks.tasks.utils import meanlogsumexp
 
 def parse_args():  # pragma: no cover
     parser = argparse.ArgumentParser()
@@ -28,26 +29,66 @@ def run(ARGS, data=None, model=None, is_test=False):
     model = model or get_regression_model(ARGS.model)(is_test=is_test, seed=ARGS.seed)
 
     model.fit(data.X_train, data.Y_train)
-    m, v = model.predict(data.X_test)
+    m, v = model.predict(data.X_test)  # both [data points x output dim] or [samples x data points x output dim]
+
+    assert m.ndim == v.ndim
+    assert m.ndim in {2, 3}  # 3-dim in case of approximate predictions (multiple samples per each X)
+    assert np.all(v >= 0.0)
 
     res = {}
+    log_eps = np.log(1e-12)  # log probability threshold
+    log_1_minus_eps = np.log(1.0 - 1e-12)
 
-    l = norm.logpdf(data.Y_test, loc=m, scale=v**0.5)
-    res['test_loglik'] = np.average(l)
+    if m.ndim == 2:  # keep analysis as in the original code in case of 2-dim predictions
 
-    lu = norm.logpdf(data.Y_test * data.Y_std, loc=m * data.Y_std, scale=(v**0.5) * data.Y_std)
-    res['test_loglik_unnormalized'] = np.average(lu)
+        l = norm.logpdf(data.Y_test, loc=m, scale=v ** 0.5)  # []
+        l = np.clip(l, log_eps, log_1_minus_eps)  # clip
+        res['test_loglik'] = np.average(l)
 
-    d = data.Y_test - m
-    du = d * data.Y_std
+        lu = norm.logpdf(data.Y_test * data.Y_std, loc=m * data.Y_std, scale=(v ** 0.5) * data.Y_std)
+        lu = np.clip(lu, log_eps, log_1_minus_eps)  # clip
+        res['test_loglik_unnormalized'] = np.average(lu)
 
-    res['test_mae'] = np.average(np.abs(d))
-    res['test_mae_unnormalized'] = np.average(np.abs(du))
+        d = data.Y_test - m
+        du = d * data.Y_std
 
-    res['test_rmse'] = np.average(d**2)**0.5
-    res['test_rmse_unnormalized'] = np.average(du**2)**0.5
+        res['test_mae'] = np.average(np.abs(d))
+        res['test_mae_unnormalized'] = np.average(np.abs(du))
 
-    res.update(ARGS.__dict__)
+        res['test_rmse'] = np.average(d ** 2) ** 0.5
+        res['test_rmse_unnormalized'] = np.average(du ** 2) ** 0.5
+
+    else:  # compute metrics in case of 3-dim predictions
+
+        res['test_loglik'] = []
+        res['test_loglik_unnormalized'] = []
+
+        for n in range(m.shape[0]):  # iterate through samples
+            l = norm.logpdf(data.Y_test, loc=m[n], scale=v[n] ** 0.5)
+            l = np.clip(l, log_eps, log_1_minus_eps)  # clip
+            res['test_loglik'].append(l)
+
+            lu = norm.logpdf(data.Y_test * data.Y_std, loc=m[n] * data.Y_std, scale=(v[n] ** 0.5) * data.Y_std)
+            lu = np.clip(lu, log_eps, log_1_minus_eps)  # clip
+            res['test_loglik_unnormalized'].append(lu)
+
+        # Mixture test likelihood (mean over per data point evaluations)
+        res['test_loglik'] = meanlogsumexp(res['test_loglik'])
+
+        # Mixture test likelihood (mean over per data point evaluations)
+        res['test_loglik_unnormalized'] = meanlogsumexp(res['test_loglik_unnormalized'])
+
+        d = data.Y_test - np.mean(m, axis=0)
+        du = d * data.Y_std
+
+        res['test_mae'] = np.average(np.abs(d))
+        res['test_mae_unnormalized'] = np.average(np.abs(du))
+
+        res['test_rmse'] = np.average(d ** 2) ** 0.5
+        res['test_rmse_unnormalized'] = np.average(du ** 2) ** 0.5
+
+    if not is_test:
+        res.update(ARGS.__dict__)
 
     if not is_test:  # pragma: no cover
         with Database(ARGS.database_path) as db:
