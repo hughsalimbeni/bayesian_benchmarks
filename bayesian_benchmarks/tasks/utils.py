@@ -13,6 +13,8 @@ def meanlogsumexp(logps: Union[List[np.ndarray], np.ndarray], axis: int=0) -> np
     Mean log sum exp of a log p list.
     :param logps: list of log probs [samples x data points] or [samples x data points x output dim]
     :param axis: determines reduction
-    :return: avg probability value [1]
+    :return: avg probability value (empty shape)
     """
-    return np.mean(logsumexp(logps, axis=axis) - np.log(len(logps)))
+    logps = np.asarray(logps)
+    assert axis < logps.ndim
+    return np.mean(logsumexp(logps, axis=axis) - np.log(logps.shape[axis]))
