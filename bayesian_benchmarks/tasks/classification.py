@@ -17,6 +17,7 @@ from scipy.stats import multinomial
 from bayesian_benchmarks.data import get_classification_data
 from bayesian_benchmarks.models.get_model import get_classification_model
 from bayesian_benchmarks.database_utils import Database
+from bayesian_benchmarks.tasks.utils import meanlogsumexp
 
 def parse_args():  # pragma: no cover
     parser = argparse.ArgumentParser()
@@ -32,35 +33,52 @@ def run(ARGS, data=None, model=None, is_test=False):
     data = data or get_classification_data(ARGS.dataset, split=ARGS.split)
     model = model or get_classification_model(ARGS.model)(data.K, is_test=is_test, seed=ARGS.seed)
 
-
     def onehot(Y, K):
-        return np.eye(K)[Y.flatten().astype(int)].reshape(Y.shape[:-1]+(K,))
+        return np.eye(K)[Y.flatten().astype(int)].reshape(Y.shape[:-1] + (K,))
 
-    Y_oh = onehot(data.Y_test, data.K)[None, :, :]  # 1, N_test, K
+    Y_oh = onehot(data.Y_test, data.K)[None, :, :]  # [1 x N_test x K]
 
     model.fit(data.X_train, data.Y_train)
-    p = model.predict(data.X_test)  # N_test, K
+    p = model.predict(data.X_test)  # [N_test x K] or [samples x N_test x K]
+
+    assert p.ndim in {2, 3}  # 3-dim in case of approximate predictions (multiple samples per each X)
 
     # clip very large and small probs
     eps = 1e-12
     p = np.clip(p, eps, 1 - eps)
     p = p / np.expand_dims(np.sum(p, -1), -1)
 
+    assert np.all(p >= 0.0) and np.all(p <= 1.0)
+
     # evaluation metrics
     res = {}
 
-    logp = multinomial.logpmf(Y_oh, n=1, p=p)
+    if p.ndim == 2:  # keep analysis as in the original code in case 2-dim predictions
 
-    res['test_loglik'] = np.average(logp)
+        logp = multinomial.logpmf(Y_oh, n=1, p=p)  # [N_test]
 
-    pred = np.argmax(p, axis=-1)
+        res['test_loglik'] = np.average(logp)
+
+        pred = np.argmax(p, axis=-1)
+
+    else:  # compute metrics in case of 3-dim predictions
+
+        res['test_loglik'] = []
+
+        for n in range(p.shape[0]):  # iterate through samples
+            logp = multinomial.logpmf(Y_oh, n=1, p=p[n])  # [N_test]
+            res['test_loglik'].append(logp)
+
+        # Mixture test likelihood (mean over per data point evaluations)
+        res['test_loglik'] = meanlogsumexp(res['test_loglik'])
+
+        p = np.mean(p, axis=0)
+        pred = np.argmax(p, axis=-1)
 
     res['test_acc'] = np.average(np.array(pred == data.Y_test.flatten()).astype(float))
 
-    res['Y_test'] = data.Y_test
-    res['p_test'] = p
-
-    res.update(ARGS.__dict__)
+    if not is_test:
+        res.update(ARGS.__dict__)
 
     if not is_test:  # pragma: no cover
         with Database(ARGS.database_path) as db:

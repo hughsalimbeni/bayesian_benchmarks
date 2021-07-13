@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import pytest
+import numpy as np
 
 from bayesian_benchmarks.tasks.regression import run as run_regression
 from bayesian_benchmarks.tasks.classification import run as run_classification
@@ -77,3 +78,116 @@ def test_active_learning_discrete(model, dataset):
          'num_initial_points': 10}
 
     run_AL_disc(ConvertToNamespace(d), is_test=True)
+
+
+# Testing modified regression and classification runs with mocks
+
+class RegressionMock(object):
+    """
+    Regression mock.
+    """
+    def fit(self, X: np.ndarray, Y:np.ndarray) -> None:
+        pass
+    def predict(self, X: np.ndarray) -> (np.ndarray, np.ndarray):
+        mu = np.array([[1., 2., 3.], [4., 5., 6.]])  # [data points x output dim]
+        var = np.array([[.1, .2, .3], [.4, .5, .6]])  # [data points x output dim]
+        return mu, var
+
+class ApproximateRegressionMock(RegressionMock):
+    """
+    Approximate regression mock.
+    """
+    def predict(self, X: np.ndarray) -> (np.ndarray, np.ndarray):
+        mu = np.array([[[1., 2., 3.], [4., 5., 6.]],
+                       [[1.5, 2.5, 3.5], [4.5, 5.5, 6.5]]])  # [samples x data points x output dim]
+        var = np.array([[[.1, .2, .3], [.4, .5, .6]],
+                        [[.1, .2, .3], [.4, .5, .6]]])  # [samples x data points x output dim]
+        return mu, var
+
+class ClassificationMock(object):
+    """
+    Classification mock.
+    """
+    def fit(self, X: np.ndarray, Y:np.ndarray) -> None:
+        pass
+    def predict(self, X: np.ndarray) -> np.ndarray:
+        p = np.array([[.1, .2, .7], [.6, .3, .1]])  # [data points x output dim]
+        return p
+
+class ApproximateClassificationMock(ClassificationMock):
+    """
+    Approximate classification mock.
+    """
+    def predict(self, X: np.ndarray) -> np.ndarray:
+        p = np.array([[[.1, .2, .7], [.6, .3, .1]],
+                      [[.01, .02, .97], [.64, .05, .31]]])  # [samples x data points x output dim]
+        return p
+
+class RegressionDataMock(object):
+    """
+    Regression data mock.
+    """
+    X_train, Y_train = np.empty(shape=()), np.empty(shape=())
+    X_test, Y_test = np.empty(shape=()), np.array([[1., 1., 1.], [1., 1., 1.]])  # [data points x output dim]
+    Y_std = 2.  # Y_test must be compatible with regression mocks...
+
+class ClassificationDataMock(object):
+    """
+    Classification data mock.
+    """
+    X_train, Y_train = np.empty(shape=()), np.empty(shape=())
+    X_test, Y_test = np.empty(shape=()), np.array([[0], [1]])  # [data points x output dim]
+    K = 3  # Y_test and K must be compatible with classification mocks...
+
+# Below correct results computed by hand...
+
+regression_results = {}
+regression_results['test_loglik'] = -9.8963
+regression_results['test_loglik_unnormalized'] = -10.5507
+regression_results['test_mae'] = 2.5
+regression_results['test_mae_unnormalized'] = 5.0
+regression_results['test_rmse'] = 3.0277
+regression_results['test_rmse_unnormalized'] = 6.0553
+
+approximate_regression_results = {}
+approximate_regression_results['test_loglik'] = -10.5197
+approximate_regression_results['test_loglik_unnormalized'] = -11.1836
+approximate_regression_results['test_mae'] = 2.75
+approximate_regression_results['test_mae_unnormalized'] = 5.5
+approximate_regression_results['test_rmse'] = 3.2372
+approximate_regression_results['test_rmse_unnormalized'] = 6.4743
+
+classification_results = {}
+classification_results['test_loglik'] = -1.7533
+classification_results['test_acc'] = 0.0
+
+approximate_classification_results = {}
+approximate_classification_results['test_loglik'] = -2.3217
+approximate_classification_results['test_acc'] = 0.0
+
+# Below two tests, one for regression and one for classification (2-dim and 3-dim case respectively)
+
+regression_tuple = (RegressionDataMock(), RegressionMock(), regression_results)
+approx_regression_tuple = (RegressionDataMock(), ApproximateRegressionMock(), approximate_regression_results)
+
+@pytest.mark.parametrize('tuple', [regression_tuple, approx_regression_tuple])
+def test_regression(tuple):
+    data, model, correct_result = tuple
+    result = run_regression(None, data=data, model=model, is_test=True)
+
+    evaluation_metrics = {'test_loglik', 'test_loglik_unnormalized', 'test_mae', 'test_mae_unnormalized',
+                          'test_rmse', 'test_rmse_unnormalized'}
+    for evaluation_metric in evaluation_metrics:
+        np.testing.assert_almost_equal(correct_result[evaluation_metric], result[evaluation_metric], decimal=3)
+
+classification_tuple = (ClassificationDataMock(), ClassificationMock(), classification_results)
+approx_classification_tuple = (ClassificationDataMock(), ApproximateClassificationMock(), approximate_classification_results)
+
+@pytest.mark.parametrize('tuple', [classification_tuple, approx_classification_tuple])
+def test_classification(tuple):
+    data, model, correct_result = tuple
+    result = run_classification(None, data=data, model=model, is_test=True)
+
+    evaluation_metrics = {'test_loglik', 'test_acc'}
+    for evaluation_metric in evaluation_metrics:
+        np.testing.assert_almost_equal(correct_result[evaluation_metric], result[evaluation_metric], decimal=3)
