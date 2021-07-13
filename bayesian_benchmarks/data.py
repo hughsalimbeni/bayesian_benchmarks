@@ -224,7 +224,7 @@ class Yacht(Dataset):
     url = uci_base_url + '/00243/yacht_hydrodynamics.data'
 
     def read_data(self):
-        data = pandas.read_fwf(self.datapath, header=None).values[:-1, :]
+        data = pandas.read_fwf(self.datapath, header=None).values
         return data[:, :-1], data[:, -1].reshape(-1, 1)
 
 
