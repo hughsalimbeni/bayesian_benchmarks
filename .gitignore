@@ -108,3 +108,6 @@ venv.bak/
 
 # data
 bayesian_benchmarks/data
+
+# IDW
+.vscode
